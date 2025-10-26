@@ -55,12 +55,12 @@ const Sidebar = ({ sidebarItems }) => {
         </div>
 
         {/* Today Button */}
-        <Link href="/" className="mb-6">
-          <button className="w-full bg-gradient-to-r from-green-400 to-emerald-500 text-white px-4 py-3 rounded-xl text-sm font-bold hover:from-green-500 hover:to-emerald-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2">
-            <LayoutDashboard className="w-4 h-4" />
-            TODAY
-          </button>
-        </Link>
+   <Link href="/" className="mb-6">
+  <button className="w-full bg-gradient-to-r from-green-400 to-emerald-500 text-white px-4 py-3 rounded-xl text-sm font-bold hover:from-green-500 hover:to-emerald-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2">
+    <LayoutDashboard className="w-4 h-4" />
+    {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+  </button>
+</Link>
 
         {/* App Icons */}
         <div className="flex flex-col gap-3 mb-8">

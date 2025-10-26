@@ -1,5 +1,7 @@
 <?php
 
+// app/Models/Task.php (updated with testingPoints relationship)
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -36,5 +38,10 @@ class Task extends Model
     public function detail()
     {
         return $this->hasOne(TaskDetail::class);
+    }
+
+    public function testingPoints()
+    {
+        return $this->hasMany(TestingPoint::class);
     }
 }

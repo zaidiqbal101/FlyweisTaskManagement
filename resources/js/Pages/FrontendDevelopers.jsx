@@ -1,6 +1,7 @@
-// FrontendDevelopers.jsx
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+// resources/js/Pages/FrontendDevelopers.jsx (updated with all employees and sub_category filter)
+
+import React, { useState, useEffect, useMemo } from "react";
+import { router } from "@inertiajs/react";
 import {
   ArrowLeft,
   Users,
@@ -11,27 +12,26 @@ import {
   Eye,
 } from "lucide-react";
 
-const employees = [
-  {
-    id: 1,
-    name: "Alice",
-    manager: "John Doe",
-    projects: [{ name: "Frontend Dashboard", timeline: "2025-12-15", client: "Client A" }],
-  },
-  {
-    id: 3,
-    name: "Charlie",
-    manager: "John Doe",
-    projects: [{ name: "UI Fixes", timeline: "2025-12-10", client: "Client A" }],
-  },
-];
-
-const FrontendDevelopers = () => {
-  const navigate = useNavigate();
+const FrontendDevelopers = ({ employees = [] }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [subCategoryFilter, setSubCategoryFilter] = useState("All");
 
-  const today = new Date('2025-10-15');
+  // Add this useEffect to debug
+  useEffect(() => {
+    console.log('=== FRONTEND DEVELOPERS DEBUG ===');
+    console.log('Employees prop:', employees);
+    console.log('Employees count:', employees.length);
+    console.log('Employees type:', typeof employees);
+    console.log('Is Array:', Array.isArray(employees));
+    if (employees.length > 0) {
+      console.log('First employee:', employees[0]);
+    }
+  }, [employees]);
+
+  const today = new Date('2025-10-26');
+  
   const getProjectStatus = (timeline) => {
+    if (!timeline) return "No Timeline";
     const due = new Date(timeline);
     if (due < today) return "Overdue";
     if (due.toDateString() === today.toDateString()) return "Due Today";
@@ -39,6 +39,7 @@ const FrontendDevelopers = () => {
   };
 
   const getDaysLeft = (timeline) => {
+    if (!timeline) return 0;
     const due = new Date(timeline);
     const diffTime = due - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -66,6 +67,8 @@ const FrontendDevelopers = () => {
         return "bg-yellow-100 text-yellow-800 border-yellow-200";
       case "Overdue":
         return "bg-red-100 text-red-800 border-red-200";
+      case "No Timeline":
+        return "bg-gray-100 text-gray-800 border-gray-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
@@ -77,61 +80,87 @@ const FrontendDevelopers = () => {
     return "text-gray-700";
   };
 
-  const filteredEmployees = employees.filter((e) =>
-    e.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    e.manager.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    e.projects[0]?.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    e.projects[0]?.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const getInitials = (name) => {
+    if (!name) return "N/A";
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
+  // Compute unique sub_categories for filter
+  const uniqueSubCategories = useMemo(() => {
+    const subs = employees.map(e => e.sub_category).filter(Boolean);
+    return ['All', ...new Set(subs)];
+  }, [employees]);
+
+  const filteredEmployees = employees.filter((e) => {
+    const searchMatch = 
+      e.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      e.manager?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      e.projects?.some(p => 
+        (p.client || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.name || "").toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+    const subCategoryMatch = subCategoryFilter === "All" || e.sub_category === subCategoryFilter;
+
+    return searchMatch && subCategoryMatch;
+  });
+
+  console.log('Filtered employees count:', filteredEmployees.length);
 
   const totalDevelopers = employees.length;
   const dueTodayCount = employees.filter((e) =>
-    e.projects.some((p) => getProjectStatus(p.timeline) === "Due Today")
+    e.projects?.some((p) => getProjectStatus(p.timeline) === "Due Today")
   ).length;
   const overdueCount = employees.filter((e) =>
-    e.projects.some((p) => getProjectStatus(p.timeline) === "Overdue")
+    e.projects?.some((p) => getProjectStatus(p.timeline) === "Overdue")
   ).length;
-
-  const getInitials = (name) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8 space-y-8">
       <div className="flex justify-between items-center bg-white rounded-xl shadow-sm p-6 border border-gray-200">
         <button
-          onClick={() => navigate("/manager")}
+          onClick={() => router.visit("/manager")}
           className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200"
         >
           <ArrowLeft size={20} />
           Back to Dashboard
         </button>
         <h1 className="text-4xl font-bold text-gray-800 flex items-center gap-3">
-          💻 Frontend Developers
+          👥 All Employees
         </h1>
-        <div className="w-32" /> {/* Spacer for alignment */}
+        <div className="w-32" />
+      </div>
+
+      {/* Debug Info Card - Remove after debugging */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+        <p className="text-sm font-mono">
+          <strong>Debug Info:</strong> Received {employees.length} employees | 
+          Filtered: {filteredEmployees.length} | 
+          Type: {typeof employees} | 
+          IsArray: {Array.isArray(employees).toString()}
+        </p>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
           [
-            "Total Frontend Developers",
+            "Total Employees",
             totalDevelopers,
             "from-blue-500 to-blue-600",
-            <Users size={24} />,
+            <Users size={24} key="users" />,
           ],
           [
             "Due Today",
             dueTodayCount,
             "from-yellow-500 to-yellow-600",
-            <Clock size={24} />,
+            <Clock size={24} key="clock" />,
           ],
           [
             "Overdue",
             overdueCount,
             "from-red-500 to-red-600",
-            <AlertCircle size={24} className="text-white/80" />,
+            <AlertCircle size={24} className="text-white/80" key="alert" />,
           ],
         ].map(([label, count, color, icon]) => (
           <div
@@ -149,8 +178,8 @@ const FrontendDevelopers = () => {
         ))}
       </div>
 
-      {/* Search Bar */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+      {/* Filters and Search */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input
@@ -161,6 +190,17 @@ const FrontendDevelopers = () => {
             className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
           />
         </div>
+        <select
+          value={subCategoryFilter}
+          onChange={(e) => setSubCategoryFilter(e.target.value)}
+          className="border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+        >
+          {uniqueSubCategories.map((sub) => (
+            <option key={sub} value={sub}>
+              {sub === "All" ? "All Sub-Categories" : `Sub-Category: ${sub}`}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
@@ -170,6 +210,7 @@ const FrontendDevelopers = () => {
               <tr>
                 {[
                   "Name",
+                  "Category / Sub-Category",
                   "Assigned Manager",
                   "Client",
                   "Project Working On",
@@ -189,10 +230,12 @@ const FrontendDevelopers = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredEmployees.map((e) => {
-                const timeline = e.projects[0]?.timeline || "";
+                const project = e.projects?.[0] || {};
+                const timeline = project.timeline || "";
                 const status = getProjectStatus(timeline);
                 const daysLeft = getDaysLeft(timeline);
-                const projectedDays = status === "Overdue" ? "Overdue" : `${daysLeft} days`;
+                const projectedDays = status === "Overdue" ? "Overdue" : (status === "No Timeline" ? "N/A" : `${daysLeft} days`);
+                const categoryDisplay = `${e.category}${e.sub_category ? ` / ${e.sub_category}` : ''}`;
                 return (
                   <tr
                     key={e.id}
@@ -206,16 +249,24 @@ const FrontendDevelopers = () => {
                         <span className="font-medium text-gray-900">{e.name}</span>
                       </div>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                      <div>
+                        <span className="font-medium text-gray-900">{e.category}</span>
+                        {e.sub_category && (
+                          <span className="block text-sm text-gray-500">/{e.sub_category}</span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
-                      {e.manager}
+                      {e.manager || "N/A"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {e.projects[0]?.client || "N/A"}
+                        {project.client || "N/A"}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-gray-700 max-w-xs truncate">
-                      {e.projects[0]?.name || "N/A"}
+                      {project.name || "N/A"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
@@ -235,7 +286,7 @@ const FrontendDevelopers = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <button
-                        onClick={() => navigate(`/employee/${e.id}`)}
+                        onClick={() => router.visit(`/employee/${e.id}`)}
                         className="inline-flex items-center gap-1 bg-blue-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-600 transition-all duration-200 shadow-sm hover:shadow-md"
                       >
                         <Eye size={14} />
@@ -251,7 +302,8 @@ const FrontendDevelopers = () => {
         {filteredEmployees.length === 0 && (
           <div className="text-center py-12 bg-gray-50">
             <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">No frontend developers found matching the search.</p>
+            <p className="text-gray-500 text-lg">No employees found matching the filters.</p>
+            <p className="text-gray-400 text-sm mt-2">Total employees received: {employees.length}</p>
           </div>
         )}
       </div>

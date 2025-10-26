@@ -7,6 +7,8 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
+  Trash2,
+  Eye,
 } from "lucide-react";
 
 const getEmployeeName = (task, employees) =>
@@ -75,6 +77,12 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
       router.post("/manager/add-client", { name: trimmedClient }, {
         onSuccess: () => setNewClient(""),
       });
+    }
+  };
+
+  const handleDeleteTask = (id) => {
+    if (confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
+      router.delete(`/manager/task/${id}`);
     }
   };
 
@@ -250,7 +258,7 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
             />
             <button
               onClick={handleAddEmployee}
-              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-all duration-200 font-medium flex items-center gap-2"
+              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-all duration-200 font-medium flex items-center gap-2 shadow-md hover:shadow-lg"
             >
               <PlusCircle size={18} /> Add Employee
             </button>
@@ -272,7 +280,7 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
             />
             <button
               onClick={handleAddClient}
-              className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-all duration-200 font-medium flex items-center gap-2"
+              className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-all duration-200 font-medium flex items-center gap-2 shadow-md hover:shadow-lg"
             >
               <PlusCircle size={18} /> Add Client
             </button>
@@ -330,7 +338,7 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
             />
             <button
               onClick={handleAddTask}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 font-medium flex items-center gap-2"
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 font-medium flex items-center gap-2 shadow-md hover:shadow-lg"
             >
               <PlusCircle size={18} /> Add Task
             </button>
@@ -380,7 +388,7 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
                     <td className="px-6 py-4 whitespace-nowrap text-center text-gray-700">
                       {t.testingPoints ? t.testingPoints.length : 0}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                    <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
                       <button
                         onClick={() => {
                           const employeeName = getEmployeeName(t, employees);
@@ -390,9 +398,17 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
                           );
                           router.visit(`/task/${t.id}`);
                         }}
-                        className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition-all duration-200 font-medium"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-md text-xs font-medium hover:bg-blue-100 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow-md"
                       >
-                        View Details
+                        <Eye size={14} />
+                        View
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTask(t.id)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 rounded-md text-xs font-medium hover:bg-red-100 hover:border-red-300 transition-all duration-200 shadow-sm hover:shadow-md"
+                      >
+                        <Trash2 size={14} />
+                        Delete
                       </button>
                     </td>
                   </tr>

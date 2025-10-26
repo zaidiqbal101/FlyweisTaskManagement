@@ -1,5 +1,7 @@
 <?php
 
+// app/Http/Controllers/ManagerController.php (updated show method to include testingPoints)
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -8,6 +10,7 @@ use App\Models\Task;
 use App\Models\Employee;
 use App\Models\Client;
 use App\Models\TaskDetail;
+use App\Models\TestingPoint;
 
 class ManagerController extends Controller
 {
@@ -71,7 +74,8 @@ class ManagerController extends Controller
         $task = Task::with([
             'employee:id,name',
             'client:id,name',
-            'detail'
+            'detail',
+            'testingPoints'
         ])->findOrFail($id);
 
         $detail = $task->detail ?? new TaskDetail(['task_id' => $task->id]);
@@ -87,7 +91,18 @@ class ManagerController extends Controller
             'devRemark' => $detail->dev_remark ?? '',
             'clientRemark' => $detail->client_remark ?? '',
             'managerRemark' => $detail->manager_remarks ?? '',
-            'testingPoints' => $detail->testing_points ?? [],
+            'testingPoints' => $task->testingPoints->map(function ($point) {
+                return [
+                    'id' => $point->id,
+                    'number' => $point->id, // Use id as number for simplicity, or add a number field if needed
+                    'description' => $point->description,
+                    'passed' => $point->passed,
+                    'remark' => $point->remark,
+                    'testerName' => $point->tester_name,
+                    'addedDate' => $point->added_date->format('Y-m-d'),
+                    'managerRemark' => $point->manager_remark ?? '',
+                ];
+            }),
             'developer' => $task->employee->name ?? 'Unknown',
             'managerRemarks' => $detail->manager_remarks ?? ['', '', ''],
             'overallRemark' => $detail->overall_remark ?? '',
@@ -111,7 +126,6 @@ class ManagerController extends Controller
             'clientRemark' => 'nullable|string|max:1000',
             'overallRemark' => 'nullable|string|max:1000',
             'managerRemarks' => 'nullable|array|max:3',
-            'testingPoints' => 'nullable|array',
             'documents' => 'nullable|array',
         ]);
 
@@ -126,10 +140,20 @@ class ManagerController extends Controller
                 'client_remark' => $validated['clientRemark'] ?? $detail->client_remark,
                 'overall_remark' => $validated['overallRemark'],
                 'manager_remarks' => $validated['managerRemarks'],
-                'testing_points' => $validated['testingPoints'],
                 'documents' => $validated['documents'],
             ]
         );
+
+        // Update manager remarks for testing points if provided
+        if ($request->has('testingPoints')) {
+            foreach ($validated['testingPoints'] ?? [] as $point) {
+                if (isset($point['managerRemark'])) {
+                    TestingPoint::where('id', $point['id'])->update([
+                        'manager_remark' => $point['managerRemark'],
+                    ]);
+                }
+            }
+        }
 
         $request->session()->flash('success', 'Task details updated successfully!');
 
@@ -152,9 +176,7 @@ class ManagerController extends Controller
             'manager' => $validated['manager'],
         ]);
 
-        $request->session()->flash('success', 'Employee added successfully!');
-
-        return Inertia::render('Manager', $this->getDashboardData());
+        return redirect()->route('manager.index')->with('success', 'Employee added successfully!');
     }
 
     public function storeClient(Request $request)
@@ -167,9 +189,7 @@ class ManagerController extends Controller
             'name' => $validated['name'],
         ]);
 
-        $request->session()->flash('success', 'Client added successfully!');
-
-        return Inertia::render('Manager', $this->getDashboardData());
+        return redirect()->route('manager.index')->with('success', 'Client added successfully!');
     }
 
     public function storeTask(Request $request)
@@ -196,8 +216,18 @@ class ManagerController extends Controller
             'expected_timeline' => $validated['expected_timeline'],
         ]);
 
-        $request->session()->flash('success', 'Task added successfully!');
+        return redirect()->route('manager.index')->with('success', 'Task added successfully!');
+    }
 
-        return Inertia::render('Manager', $this->getDashboardData());
+    public function destroy($id)
+    {
+        $task = Task::findOrFail($id);
+        $task->detail()->delete();
+        $task->testingPoints()->delete(); // Delete related testing points
+        $task->delete();
+
+        request()->session()->flash('success', 'Task deleted successfully!');
+
+        return redirect()->route('manager.index');
     }
 }
