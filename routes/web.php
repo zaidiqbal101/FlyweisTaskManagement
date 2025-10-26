@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\DeveloperController;
+use App\Http\Controllers\ClientController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -22,13 +23,7 @@ Route::post('/manager/add-client', [ManagerController::class, 'storeClient'])->n
 Route::post('/manager/add-task', [ManagerController::class, 'storeTask'])->name('manager.addTask');
 Route::put('/task/{id}', [ManagerController::class, 'update'])->name('task.update');
 
-Route::get('/client', function () {
-    return Inertia::render('Client');
-})->name('client');
-
-// Route::get('/developer', function () {
-//     return Inertia::render('Developer');
-// })->name('developer');
+Route::get('/client', [ClientController::class, 'index'])->name('client');
 
 Route::prefix('developer')->name('developer.')->group(function () {
     Route::get('/', [DeveloperController::class, 'index'])->name('index');
