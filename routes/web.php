@@ -32,7 +32,7 @@ Route::post('/manager/add-task', [ManagerController::class, 'storeTask'])->name(
 Route::get('/task/{id}', [ManagerController::class, 'show'])->name('manager.show');
 Route::put('/task/{id}', [ManagerController::class, 'update'])->name('manager.update');
 Route::delete('/manager/task/{id}', [ManagerController::class, 'destroy'])->name('manager.destroy');
-
+//
 Route::get('/client', [ClientController::class, 'index'])->name('client');
 Route::get('/client/{client}', [ClientController::class, 'show'])->name('client.show');
 
