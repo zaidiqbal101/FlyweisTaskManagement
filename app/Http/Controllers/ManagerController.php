@@ -32,7 +32,8 @@ class ManagerController extends Controller
         $tasks = Task::with([
             'employee:id,name',
             'client:id,name',
-            'detail'
+            'detail',
+            'testingPoints' // Add the testingPoints relationship
         ])
         ->get()
         ->map(function ($task) {
@@ -47,7 +48,17 @@ class ManagerController extends Controller
                 'devRemark' => $task->detail->dev_remark ?? '', // From detail
                 'clientRemark' => $task->detail->client_remark ?? '', // From detail
                 'managerRemark' => $task->detail->manager_remark ?? '', // From detail
-                'testingPoints' => $task->detail && $task->detail->testing_points ? $task->detail->testing_points : [], // From detail, cast array
+                'testingPoints' => $task->testingPoints->map(function ($point) {
+            return [
+                'id' => $point->id,
+                'description' => $point->description,
+                'passed' => $point->passed,
+                'remark' => $point->remark,
+                'testerName' => $point->tester_name,
+                'addedDate' => $point->added_date->format('Y-m-d'),
+                'managerRemark' => $point->manager_remark ?? '',
+            ];
+        })->toArray(),
             ];
         });
 

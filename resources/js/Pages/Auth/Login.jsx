@@ -1,104 +1,92 @@
-import Checkbox from '@/Components/Checkbox';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
-import { router } from '@inertiajs/react';
-export default function Login({ status, canResetPassword }) {
-    const { data, setData, post, processing, errors, reset } = useForm({
-        email: '',
-        password: '',
-        remember: false,
-    });
+import React, { useState } from 'react';
+import { usePage, router } from '@inertiajs/react';
 
-    const handleregister=()=>{
-        router.visit('/register');
-    }
-    const submit = (e) => {
+const Login = () => {
+    const { errors } = usePage().props;
+    const [form, setForm] = useState({ email: '', password: '' });
+
+    const handleSubmit = (e) => {
         e.preventDefault();
-
-        post(route('login'), {
-            onFinish: () => reset('password'),
+        router.post(route('login.post'), form, {
+            onError: (errors) => {
+                console.log('Login errors:', errors);
+            },
         });
     };
 
     return (
-        <GuestLayout>
-            <Head title="Log in" />
-   <button onClick={handleregister} className='px-2 py-2 rounded bg-red-200'>Register</button>
-            {status && (
-                <div className="mb-4 text-sm font-medium text-green-600">
-                    {status}
-                </div>
-            )}
+        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+                <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">
+                    Welcome Back 👋
+                </h2>
 
-            <form onSubmit={submit}>
-                <div>
-                    <InputLabel htmlFor="email" value="Email" />
-
-                    <TextInput
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={data.email}
-                        className="mt-1 block w-full"
-                        autoComplete="username"
-                        isFocused={true}
-                        onChange={(e) => setData('email', e.target.value)}
-                    />
-
-                    <InputError message={errors.email} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
-                        id="password"
-                        type="password"
-                        name="password"
-                        value={data.password}
-                        className="mt-1 block w-full"
-                        autoComplete="current-password"
-                        onChange={(e) => setData('password', e.target.value)}
-                    />
-
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
-
-                <div className="mt-4 block">
-                    <label className="flex items-center">
-                        <Checkbox
-                            name="remember"
-                            checked={data.remember}
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    {/* Email */}
+                    <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-2">
+                            Email
+                        </label>
+                        <input
+                            type="email"
+                            value={form.email}
                             onChange={(e) =>
-                                setData('remember', e.target.checked)
+                                setForm({ ...form, email: e.target.value })
                             }
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            placeholder="Enter your email"
+                            required
                         />
-                        <span className="ms-2 text-sm text-gray-600">
-                            Remember me
-                        </span>
-                    </label>
-                </div>
+                        {errors.email && (
+                            <p className="text-red-500 text-sm mt-1">
+                                {errors.email}
+                            </p>
+                        )}
+                    </div>
 
-                <div className="mt-4 flex items-center justify-end">
-                    {canResetPassword && (
-                        <Link
-                            href={route('password.request')}
-                            className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                        >
-                            Forgot your password?
-                        </Link>
-                    )}
+                    {/* Password */}
+                    <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-2">
+                            Password
+                        </label>
+                        <input
+                            type="password"
+                            value={form.password}
+                            onChange={(e) =>
+                                setForm({ ...form, password: e.target.value })
+                            }
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            placeholder="Enter your password"
+                            required
+                        />
+                        {errors.password && (
+                            <p className="text-red-500 text-sm mt-1">
+                                {errors.password}
+                            </p>
+                        )}
+                    </div>
 
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Log in
-                    </PrimaryButton>
-                 
-                </div>
-            </form>
-        </GuestLayout>
+                    {/* Submit */}
+                    <button
+                        type="submit"
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-all duration-200"
+                    >
+                        Login
+                    </button>
+                </form>
+
+                <p className="text-center text-gray-500 text-sm mt-5">
+                    Don’t have an account?{' '}
+                    <a
+                        href={route('register')}
+                        className="text-blue-600 hover:underline"
+                    >
+                        Register
+                    </a>
+                </p>
+            </div>
+        </div>
     );
-}
+};
+
+export default Login;

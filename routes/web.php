@@ -9,9 +9,17 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\TesterController;
 use App\Http\Controllers\TodoController;
 use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\InOutController;
 
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [InOutController::class, 'showLogin'])->name('login');
+    Route::post('/login', [InOutController::class, 'login'])->name('login.post');
+    Route::get('/register', [InOutController::class, 'showRegister'])->name('register');
+    Route::post('/register', [InOutController::class, 'register'])->name('register.post');
+});
 
-
+Route::middleware('auth')->group(function () {
+Route::post('/logout', [InOutController::class, 'logout'])->name('logout');
 Route::get('/', [CalendarController::class, 'index'])->name('calendar.dashboard');
 
 Route::get('/manager', [ManagerController::class, 'index'])->name('manager');
@@ -27,12 +35,12 @@ Route::delete('/manager/task/{id}', [ManagerController::class, 'destroy'])->name
 
 Route::get('/client', [ClientController::class, 'index'])->name('client');
 Route::get('/client/{client}', [ClientController::class, 'show'])->name('client.show');
+
 Route::prefix('developer')->name('developer.')->group(function () {
     Route::get('/', [DeveloperController::class, 'index'])->name('index');
     Route::put('/task/{id}', [DeveloperController::class, 'updateTask'])->name('task.update');
 });
-
-Route::get('/employees/frontend', [EmployeeController::class, 'frontendDevelopers'])->name('employees.frontend');
+Route::get('/employees/all', [EmployeeController::class, 'frontendDevelopers'])->name('employees.frontend');
 
 Route::get('/tester', [TesterController::class, 'index'])->name('tester');
 Route::post('/tester/add-issue', [TesterController::class, 'storeTestingPoint'])->name('tester.storeTestingPoint');
@@ -42,19 +50,9 @@ Route::post('/todo', [TodoController::class, 'store'])->name('todo.store');
 Route::put('/todo/{id}', [TodoController::class, 'update'])->name('todo.update');
 Route::delete('/todo/{id}', [TodoController::class, 'destroy'])->name('todo.destroy');
 
-Route::get('/employees/backend', function () {
-    return Inertia::render('BackendDevelopers');
-})->name('employees.backend');
-
-Route::get('/employees/ui-ux', function () {
-    return Inertia::render('UiUxDesigners');
-})->name('employees.uiux');
-
-Route::get('/employees/graphics', function () {
-    return Inertia::render('GraphicsDesigners');
-})->name('employees.graphics');
-
 
 Route::get('/chat', function () {
     return Inertia::render('Chat');
 })->name('chat');
+
+});

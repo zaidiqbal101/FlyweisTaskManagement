@@ -133,12 +133,12 @@ const FrontendDevelopers = ({ employees = [] }) => {
 
       {/* Debug Info Card - Remove after debugging */}
       <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-        <p className="text-sm font-mono">
+        {/* <p className="text-sm font-mono">
           <strong>Debug Info:</strong> Received {employees.length} employees | 
           Filtered: {filteredEmployees.length} | 
           Type: {typeof employees} | 
           IsArray: {Array.isArray(employees).toString()}
-        </p>
+        </p> */}
       </div>
 
       {/* Summary Cards */}

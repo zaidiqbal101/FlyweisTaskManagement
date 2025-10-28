@@ -13,6 +13,7 @@ class DeveloperController extends Controller
 {
     private function getDeveloperData()
     {
+        // Get all developers
         $employees = Employee::where('category', 'Developers')
             ->select('id', 'name', 'sub_category')
             ->get()
@@ -24,6 +25,7 @@ class DeveloperController extends Controller
                 ];
             });
 
+        // Get all tasks with developer relationship
         $tasks = Task::with([
             'employee:id,name,category,sub_category',
             'client:id,name',
@@ -37,12 +39,16 @@ class DeveloperController extends Controller
             return [
                 'id' => $task->id,
                 'task' => $task->task,
+                'employeeId' => $task->employee_id,
                 'developer' => $task->employee->name ?? 'Unknown',
+                'developerSubCategory' => $task->employee->sub_category ?? null,
                 'client' => $task->client->name ?? 'Unknown',
                 'status' => $task->status ?? 'Pending',
                 'due' => $task->due ? $task->due->format('Y-m-d') : null,
                 'projectedTimeline' => $task->due ? $task->due->format('Y-m-d') : null,
-                'deliveredDate' => $task->detail && $task->detail->delivered_date ? $task->detail->delivered_date->format('Y-m-d') : '',
+                'deliveredDate' => $task->detail && $task->detail->delivered_date 
+                    ? $task->detail->delivered_date->format('Y-m-d') 
+                    : '',
                 'devRemark' => $task->detail ? ($task->detail->dev_remark ?? '') : '',
                 'clientRemark' => $task->detail ? ($task->detail->client_remark ?? '') : '',
             ];
@@ -66,7 +72,7 @@ class DeveloperController extends Controller
 
         $validated = $request->validate([
             'devRemark' => 'nullable|string|max:1000',
-            'status' => 'nullable|in:Pending,In Progress,Completed',
+            'status' => 'nullable|in:Pending,In Progress,Completed,Finished',
             'delivered_date' => 'nullable|date',
         ]);
 
@@ -74,7 +80,8 @@ class DeveloperController extends Controller
 
         if (isset($validated['status'])) {
             $updates['status'] = $validated['status'];
-            if ($validated['status'] === 'Completed' && isset($validated['delivered_date'])) {
+            if (($validated['status'] === 'Completed' || $validated['status'] === 'Finished') 
+                && isset($validated['delivered_date'])) {
                 $detail->delivered_date = $validated['delivered_date'];
                 $detail->save();
             }
@@ -89,8 +96,6 @@ class DeveloperController extends Controller
             $detail->save();
         }
 
-        $request->session()->flash('success', 'Task updated successfully!');
-
-        return back();
+        return back()->with('success', 'Task updated successfully!');
     }
 }

@@ -18,7 +18,7 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
   const [tasks, setTasks] = useState(initialTasks || []);
   const [employees, setEmployees] = useState(initialEmployees || []);
   const [clients, setClients] = useState(initialClients || []);
-  const [filter, setFilter] = useState({ category: "", client: "", subCategory: "" });
+  const [filter, setFilter] = useState({ category: "", client: "" }); // Removed subCategory
   const [newTask, setNewTask] = useState({
     task: "",
     employeeId: "",
@@ -28,8 +28,7 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
   });
   const [newEmployee, setNewEmployee] = useState({
     name: "",
-    category: "",
-    subCategory: "",
+    category: "Frontend Developers", // Default to Frontend
     manager: "",
   });
   const [newClient, setNewClient] = useState("");
@@ -37,12 +36,11 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
   const filteredTasks = tasks.filter((t) => {
     const emp = employees.find((e) => e.id === t.employeeId);
     const catMatch = filter.category === "" || emp?.category === filter.category;
-    const subCatMatch = filter.subCategory === "" || emp?.subCategory === filter.subCategory;
     const clientMatch = filter.client === "" || t.client === filter.client;
-    return catMatch && subCatMatch && clientMatch;
+    return catMatch && clientMatch;
   });
 
-  // ✅ Add Task (now saves to DB)
+  // Add Task
   const handleAddTask = () => {
     if (newTask.task && newTask.employeeId && newTask.client && newTask.due) {
       router.post("/manager/add-task", {
@@ -59,18 +57,21 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
     }
   };
 
-  // ✅ Add Employee to database
+  // Add Employee
   const handleAddEmployee = () => {
-    if (newEmployee.name && newEmployee.category && newEmployee.manager) {
-      router.post("/manager/add-employee", newEmployee, {
+    if (newEmployee.name && newEmployee.manager) {
+      router.post("/manager/add-employee", {
+        ...newEmployee,
+        category: "Frontend Developers", // Force category
+      }, {
         onSuccess: () => {
-          setNewEmployee({ name: "", category: "", subCategory: "", manager: "" });
+          setNewEmployee({ name: "", category: "Frontend Developers", manager: "" });
         },
       });
     }
   };
 
-  // ✅ Add Client to database
+  // Add Client
   const handleAddClient = () => {
     const trimmedClient = newClient.trim();
     if (trimmedClient) {
@@ -112,12 +113,10 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
     }
   };
 
-  const showSubCategory = newEmployee.category === "Developers";
-
   return (
     <AppLayout>
       <div className="min-h-screen bg-gray-50 p-8 space-y-4">
-        {/* ✅ Flash Message */}
+        {/* Flash Message */}
         {flash?.success && (
           <div className="bg-green-100 text-green-800 p-3 rounded-md mb-4">
             {flash.success}
@@ -126,42 +125,26 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
 
         <div className="flex justify-between items-center">
           <h1 className="text-4xl font-bold text-gray-800 flex items-center gap-3">
-            📋 Manager Dashboard
+            Manager Dashboard
           </h1>
           <div className="flex gap-3">
+            {/* Simplified Category Filter: Only All & Frontend Developers */}
             <select
               value={filter.category}
               onChange={(e) => {
                 const val = e.target.value;
-                setFilter({ ...filter, category: val, subCategory: "" });
-                if (val === "UI/UX Designers") router.visit("/employees/ui-ux");
-                else if (val === "Graphics Designers") router.visit("/employees/graphics");
+                setFilter({ ...filter, category: val });
+                if (val === "Frontend Developers") {
+                  router.visit("/employees/all");
+                }
               }}
               className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All Employees</option>
-              <option value="Developers">Developers</option>
-              <option value="UI/UX Designers">UI/UX Designers</option>
-              <option value="Graphics Designers">Graphics Designers</option>
+              <option value="Frontend Developers">Tap to View</option>
             </select>
 
-            {filter.category === "Developers" && (
-              <select
-                value={filter.subCategory || ""}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setFilter({ ...filter, subCategory: val });
-                  if (val === "Frontend") router.visit("/employees/frontend");
-                  else if (val === "Backend") router.visit("/employees/backend");
-                }}
-                className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All Developers</option>
-                <option value="Frontend">Frontend Developers</option>
-                <option value="Backend">Backend Developers</option>
-              </select>
-            )}
-
+            {/* Client Filter */}
             <select
               value={filter.client}
               onChange={(e) => setFilter({ ...filter, client: e.target.value })}
@@ -207,12 +190,12 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
           ))}
         </div>
 
-        {/* Add New Employee */}
+        {/* Add New Employee - Only Frontend Developers */}
         <div className="p-6 bg-white shadow-lg rounded-xl border border-gray-100">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-800">
-            <Users className="text-green-500" size={24} /> Add New Employee
+            <Users className="text-green-500" size={24} /> Add New Frontend Developer
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <input
               type="text"
               placeholder="Employee Name"
@@ -220,35 +203,13 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
               onChange={(e) => setNewEmployee({ ...newEmployee, name: e.target.value })}
               className="border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
-            <select
-              value={newEmployee.category}
-              onChange={(e) =>
-                setNewEmployee({
-                  ...newEmployee,
-                  category: e.target.value,
-                  subCategory: e.target.value === "Developers" ? "" : "",
-                })
-              }
-              className="border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            >
-              <option value="">Select Category</option>
-              <option value="Developers">Developers</option>
-              <option value="UI/UX Designers">UI/UX Designers</option>
-              <option value="Graphics Designers">Graphics Designers</option>
-            </select>
-
-            {showSubCategory && (
-              <select
-                value={newEmployee.subCategory}
-                onChange={(e) => setNewEmployee({ ...newEmployee, subCategory: e.target.value })}
-                className="border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              >
-                <option value="">Select Sub-Category</option>
-                <option value="Frontend">Frontend</option>
-                <option value="Backend">Backend</option>
-              </select>
-            )}
-
+            <input
+              type="text"
+              placeholder="Category"
+              value="Frontend Developers"
+              disabled
+              className="border border-gray-300 p-3 rounded-lg bg-gray-50 text-gray-500"
+            />
             <input
               type="text"
               placeholder="Manager Name"
@@ -260,7 +221,7 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
               onClick={handleAddEmployee}
               className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-all duration-200 font-medium flex items-center gap-2 shadow-md hover:shadow-lg"
             >
-              <PlusCircle size={18} /> Add Employee
+              <PlusCircle size={18} /> Add Developer
             </button>
           </div>
         </div>
@@ -287,7 +248,7 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
           </div>
         </div>
 
-        {/* Add Task */}
+        {/* Assign Task */}
         <div className="p-6 bg-white shadow-lg rounded-xl border border-gray-100">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-800">
             <PlusCircle className="text-blue-500" size={24} /> Assign New Task
@@ -305,12 +266,14 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
               onChange={(e) => setNewTask({ ...newTask, employeeId: e.target.value })}
               className="border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">Select Employee</option>
-              {employees.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.name} ({e.category}{e.subCategory && ` - ${e.subCategory}`})
-                </option>
-              ))}
+              <option value="">Select Frontend Developer</option>
+              {employees
+                .filter(e => e.category === "Frontend Developers")
+                .map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.name}
+                  </option>
+                ))}
             </select>
             <select
               value={newTask.client}
@@ -331,7 +294,7 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
             />
             <input
               type="date"
-              placeholder="Expected Timeline (Developer)"
+              placeholder="Expected Timeline"
               value={newTask.expectedTimeline}
               onChange={(e) => setNewTask({ ...newTask, expectedTimeline: e.target.value })}
               className="border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -386,7 +349,7 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
                       {t.expectedTimeline || "Not set"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center text-gray-700">
-                      {t.testingPoints ? t.testingPoints.length : 0}
+                      {t.testingPoints.length}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
                       <button
@@ -429,4 +392,4 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
   );
 };
 
-export default Manager;
+export default Manager; 

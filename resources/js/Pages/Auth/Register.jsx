@@ -1,120 +1,176 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+// resources/js/Pages/Auth/Register.jsx
+import React, { useState } from 'react';
+import { usePage, router } from '@inertiajs/react';
 
-export default function Register() {
-    const { data, setData, post, processing, errors, reset } = useForm({
+const Register = () => {
+    const { errors } = usePage().props; // Access errors from Inertia page props
+    const [form, setForm] = useState({
         name: '',
         email: '',
         password: '',
         password_confirmation: '',
+        role: 'Developer',
     });
 
-    const submit = (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-
-        post(route('register'), {
-            onFinish: () => reset('password', 'password_confirmation'),
+        router.post(route('register.post'), form, {
+            onError: (errors) => {
+                // Optional: Handle errors client-side if needed
+                console.log('Submission errors:', errors);
+            },
+            onSuccess: () => {
+                // Optional: Handle success (e.g., clear form or show message)
+                setForm({
+                    name: '',
+                    email: '',
+                    password: '',
+                    password_confirmation: '',
+                    role: 'Developer',
+                });
+            },
         });
     };
 
     return (
-        <GuestLayout>
-            <Head title="Register" />
+        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+                <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">
+                    Create an Account 🚀
+                </h2>
 
-            <form onSubmit={submit}>
-                <div>
-                    <InputLabel htmlFor="name" value="Name" />
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    {/* Name */}
+                    <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-2">
+                            Name
+                        </label>
+                        <input
+                            type="text"
+                            value={form.name}
+                            onChange={(e) =>
+                                setForm({ ...form, name: e.target.value })
+                            }
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            placeholder="Enter your name"
+                            required
+                        />
+                        {errors.name && (
+                            <p className="text-red-500 text-sm mt-1">
+                                {errors.name}
+                            </p>
+                        )}
+                    </div>
 
-                    <TextInput
-                        id="name"
-                        name="name"
-                        value={data.name}
-                        className="mt-1 block w-full"
-                        autoComplete="name"
-                        isFocused={true}
-                        onChange={(e) => setData('name', e.target.value)}
-                        required
-                    />
+                    {/* Email */}
+                    <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-2">
+                            Email
+                        </label>
+                        <input
+                            type="email"
+                            value={form.email}
+                            onChange={(e) =>
+                                setForm({ ...form, email: e.target.value })
+                            }
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            placeholder="Enter your email"
+                            required
+                        />
+                        {errors.email && (
+                            <p className="text-red-500 text-sm mt-1">
+                                {errors.email}
+                            </p>
+                        )}
+                    </div>
 
-                    <InputError message={errors.name} className="mt-2" />
-                </div>
+                    {/* Password */}
+                    <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-2">
+                            Password
+                        </label>
+                        <input
+                            type="password"
+                            value={form.password}
+                            onChange={(e) =>
+                                setForm({ ...form, password: e.target.value })
+                            }
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            placeholder="Enter your password"
+                            required
+                        />
+                        {errors.password && (
+                            <p className="text-red-500 text-sm mt-1">
+                                {errors.password}
+                            </p>
+                        )}
+                    </div>
 
-                <div className="mt-4">
-                    <InputLabel htmlFor="email" value="Email" />
+                    {/* Confirm Password */}
+                    <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-2">
+                            Confirm Password
+                        </label>
+                        <input
+                            type="password"
+                            value={form.password_confirmation}
+                            onChange={(e) =>
+                                setForm({
+                                    ...form,
+                                    password_confirmation: e.target.value,
+                                })
+                            }
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            placeholder="Re-enter your password"
+                            required
+                        />
+                    </div>
 
-                    <TextInput
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={data.email}
-                        className="mt-1 block w-full"
-                        autoComplete="username"
-                        onChange={(e) => setData('email', e.target.value)}
-                        required
-                    />
+                    {/* Role */}
+                    <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-2">
+                            Role
+                        </label>
+                        <select
+                            value={form.role}
+                            onChange={(e) =>
+                                setForm({ ...form, role: e.target.value })
+                            }
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
+                        >
+                            <option value="Manager">Manager</option>
+                            <option value="Client">Client</option>
+                            <option value="Developer">Developer</option>
+                            <option value="Tester">Tester</option>
+                        </select>
+                        {errors.role && (
+                            <p className="text-red-500 text-sm mt-1">
+                                {errors.role}
+                            </p>
+                        )}
+                    </div>
 
-                    <InputError message={errors.email} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
-                        id="password"
-                        type="password"
-                        name="password"
-                        value={data.password}
-                        className="mt-1 block w-full"
-                        autoComplete="new-password"
-                        onChange={(e) => setData('password', e.target.value)}
-                        required
-                    />
-
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel
-                        htmlFor="password_confirmation"
-                        value="Confirm Password"
-                    />
-
-                    <TextInput
-                        id="password_confirmation"
-                        type="password"
-                        name="password_confirmation"
-                        value={data.password_confirmation}
-                        className="mt-1 block w-full"
-                        autoComplete="new-password"
-                        onChange={(e) =>
-                            setData('password_confirmation', e.target.value)
-                        }
-                        required
-                    />
-
-                    <InputError
-                        message={errors.password_confirmation}
-                        className="mt-2"
-                    />
-                </div>
-
-                <div className="mt-4 flex items-center justify-end">
-                    <Link
-                        href={route('login')}
-                        className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    {/* Submit Button */}
+                    <button
+                        type="submit"
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-all duration-200"
                     >
-                        Already registered?
-                    </Link>
-
-                    <PrimaryButton className="ms-4" disabled={processing}>
                         Register
-                    </PrimaryButton>
-                </div>
-            </form>
-        </GuestLayout>
+                    </button>
+                </form>
+
+                <p className="text-center text-gray-500 text-sm mt-5">
+                    Already have an account?{' '}
+                    <a
+                        href={route('login')}
+                        className="text-blue-600 hover:underline"
+                    >
+                        Login
+                    </a>
+                </p>
+            </div>
+        </div>
     );
-}
+};
+
+export default Register;
