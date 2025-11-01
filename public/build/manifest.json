@@ -1,0 +1,454 @@
+{
+  "_AppLayout-DdE95dyF.js": {
+    "file": "assets/AppLayout-DdE95dyF.js",
+    "name": "AppLayout",
+    "imports": [
+      "resources/js/app.jsx",
+      "_createLucideIcon-Cc44qyyy.js"
+    ]
+  },
+  "_ApplicationLogo-DWGUCqbJ.js": {
+    "file": "assets/ApplicationLogo-DWGUCqbJ.js",
+    "name": "ApplicationLogo",
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "_GuestLayout-bBmxptqi.js": {
+    "file": "assets/GuestLayout-bBmxptqi.js",
+    "name": "GuestLayout",
+    "imports": [
+      "resources/js/app.jsx",
+      "_ApplicationLogo-DWGUCqbJ.js"
+    ]
+  },
+  "_InputLabel-BwBMCYT9.js": {
+    "file": "assets/InputLabel-BwBMCYT9.js",
+    "name": "InputLabel",
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "_PrimaryButton-8o291emD.js": {
+    "file": "assets/PrimaryButton-8o291emD.js",
+    "name": "PrimaryButton",
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "_TextInput-d3kytuOU.js": {
+    "file": "assets/TextInput-d3kytuOU.js",
+    "name": "TextInput",
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "_calendar-gQqKnTfh.js": {
+    "file": "assets/calendar-gQqKnTfh.js",
+    "name": "calendar",
+    "imports": [
+      "_createLucideIcon-Cc44qyyy.js"
+    ]
+  },
+  "_circle-alert-DYrdqRgD.js": {
+    "file": "assets/circle-alert-DYrdqRgD.js",
+    "name": "circle-alert",
+    "imports": [
+      "_createLucideIcon-Cc44qyyy.js"
+    ]
+  },
+  "_circle-check-big-_usF_w8l.js": {
+    "file": "assets/circle-check-big-_usF_w8l.js",
+    "name": "circle-check-big",
+    "imports": [
+      "_createLucideIcon-Cc44qyyy.js"
+    ]
+  },
+  "_circle-plus-_AtZGtgj.js": {
+    "file": "assets/circle-plus-_AtZGtgj.js",
+    "name": "circle-plus",
+    "imports": [
+      "_createLucideIcon-Cc44qyyy.js"
+    ]
+  },
+  "_clipboard-list-DbABM-v3.js": {
+    "file": "assets/clipboard-list-DbABM-v3.js",
+    "name": "clipboard-list",
+    "imports": [
+      "_createLucideIcon-Cc44qyyy.js"
+    ]
+  },
+  "_clock-DwtAG6FA.js": {
+    "file": "assets/clock-DwtAG6FA.js",
+    "name": "clock",
+    "imports": [
+      "_createLucideIcon-Cc44qyyy.js"
+    ]
+  },
+  "_createLucideIcon-Cc44qyyy.js": {
+    "file": "assets/createLucideIcon-Cc44qyyy.js",
+    "name": "createLucideIcon",
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "_eye-BbvsVSXa.js": {
+    "file": "assets/eye-BbvsVSXa.js",
+    "name": "eye",
+    "imports": [
+      "_createLucideIcon-Cc44qyyy.js"
+    ]
+  },
+  "_search-BQDiPUyu.js": {
+    "file": "assets/search-BQDiPUyu.js",
+    "name": "search",
+    "imports": [
+      "_createLucideIcon-Cc44qyyy.js"
+    ]
+  },
+  "_transition-DWlC--y0.js": {
+    "file": "assets/transition-DWlC--y0.js",
+    "name": "transition",
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "_trash-2-D_SEweL6.js": {
+    "file": "assets/trash-2-D_SEweL6.js",
+    "name": "trash-2",
+    "imports": [
+      "_createLucideIcon-Cc44qyyy.js"
+    ]
+  },
+  "_user-B8f7uQn2.js": {
+    "file": "assets/user-B8f7uQn2.js",
+    "name": "user",
+    "imports": [
+      "_createLucideIcon-Cc44qyyy.js"
+    ]
+  },
+  "_users-DR3S7fY7.js": {
+    "file": "assets/users-DR3S7fY7.js",
+    "name": "users",
+    "imports": [
+      "_createLucideIcon-Cc44qyyy.js"
+    ]
+  },
+  "_x-8DGeKDp6.js": {
+    "file": "assets/x-8DGeKDp6.js",
+    "name": "x",
+    "imports": [
+      "_createLucideIcon-Cc44qyyy.js"
+    ]
+  },
+  "resources/js/Pages/Auth/ConfirmPassword.jsx": {
+    "file": "assets/ConfirmPassword-C325qKmG.js",
+    "name": "ConfirmPassword",
+    "src": "resources/js/Pages/Auth/ConfirmPassword.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_TextInput-d3kytuOU.js",
+      "_InputLabel-BwBMCYT9.js",
+      "_PrimaryButton-8o291emD.js",
+      "_GuestLayout-bBmxptqi.js",
+      "_ApplicationLogo-DWGUCqbJ.js"
+    ]
+  },
+  "resources/js/Pages/Auth/ForgotPassword.jsx": {
+    "file": "assets/ForgotPassword-BrqGuqvS.js",
+    "name": "ForgotPassword",
+    "src": "resources/js/Pages/Auth/ForgotPassword.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_TextInput-d3kytuOU.js",
+      "_PrimaryButton-8o291emD.js",
+      "_GuestLayout-bBmxptqi.js",
+      "_ApplicationLogo-DWGUCqbJ.js"
+    ]
+  },
+  "resources/js/Pages/Auth/Login.jsx": {
+    "file": "assets/Login-C6untuJg.js",
+    "name": "Login",
+    "src": "resources/js/Pages/Auth/Login.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "resources/js/Pages/Auth/Register.jsx": {
+    "file": "assets/Register-DROacVBV.js",
+    "name": "Register",
+    "src": "resources/js/Pages/Auth/Register.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "resources/js/Pages/Auth/ResetPassword.jsx": {
+    "file": "assets/ResetPassword-BC8ZSRoG.js",
+    "name": "ResetPassword",
+    "src": "resources/js/Pages/Auth/ResetPassword.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_TextInput-d3kytuOU.js",
+      "_InputLabel-BwBMCYT9.js",
+      "_PrimaryButton-8o291emD.js",
+      "_GuestLayout-bBmxptqi.js",
+      "_ApplicationLogo-DWGUCqbJ.js"
+    ]
+  },
+  "resources/js/Pages/Auth/VerifyEmail.jsx": {
+    "file": "assets/VerifyEmail-C7rIQO3R.js",
+    "name": "VerifyEmail",
+    "src": "resources/js/Pages/Auth/VerifyEmail.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_PrimaryButton-8o291emD.js",
+      "_GuestLayout-bBmxptqi.js",
+      "_ApplicationLogo-DWGUCqbJ.js"
+    ]
+  },
+  "resources/js/Pages/CalendarDashboard.jsx": {
+    "file": "assets/CalendarDashboard-zui2S6yD.js",
+    "name": "CalendarDashboard",
+    "src": "resources/js/Pages/CalendarDashboard.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_AppLayout-DdE95dyF.js",
+      "_calendar-gQqKnTfh.js",
+      "_clipboard-list-DbABM-v3.js",
+      "_users-DR3S7fY7.js",
+      "_createLucideIcon-Cc44qyyy.js",
+      "_clock-DwtAG6FA.js",
+      "_circle-alert-DYrdqRgD.js"
+    ]
+  },
+  "resources/js/Pages/Chat.jsx": {
+    "file": "assets/Chat-C0_mcxXQ.js",
+    "name": "Chat",
+    "src": "resources/js/Pages/Chat.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_AppLayout-DdE95dyF.js",
+      "_createLucideIcon-Cc44qyyy.js",
+      "_users-DR3S7fY7.js",
+      "_clock-DwtAG6FA.js"
+    ]
+  },
+  "resources/js/Pages/Client.jsx": {
+    "file": "assets/Client-CvHGIZOi.js",
+    "name": "Client",
+    "src": "resources/js/Pages/Client.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_AppLayout-DdE95dyF.js",
+      "_createLucideIcon-Cc44qyyy.js",
+      "_clock-DwtAG6FA.js",
+      "_circle-check-big-_usF_w8l.js",
+      "_circle-alert-DYrdqRgD.js",
+      "_user-B8f7uQn2.js",
+      "_calendar-gQqKnTfh.js"
+    ]
+  },
+  "resources/js/Pages/Developer.jsx": {
+    "file": "assets/Developer-BXiozi4m.js",
+    "name": "Developer",
+    "src": "resources/js/Pages/Developer.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_AppLayout-DdE95dyF.js",
+      "_createLucideIcon-Cc44qyyy.js"
+    ]
+  },
+  "resources/js/Pages/FrontendDevelopers.jsx": {
+    "file": "assets/FrontendDevelopers-Cd-QVVIT.js",
+    "name": "FrontendDevelopers",
+    "src": "resources/js/Pages/FrontendDevelopers.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_createLucideIcon-Cc44qyyy.js",
+      "_users-DR3S7fY7.js",
+      "_clock-DwtAG6FA.js",
+      "_circle-alert-DYrdqRgD.js",
+      "_search-BQDiPUyu.js",
+      "_eye-BbvsVSXa.js",
+      "_circle-check-big-_usF_w8l.js"
+    ]
+  },
+  "resources/js/Pages/Manager.jsx": {
+    "file": "assets/Manager-BUElabDF.js",
+    "name": "Manager",
+    "src": "resources/js/Pages/Manager.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_AppLayout-DdE95dyF.js",
+      "_users-DR3S7fY7.js",
+      "_clock-DwtAG6FA.js",
+      "_createLucideIcon-Cc44qyyy.js",
+      "_circle-check-big-_usF_w8l.js",
+      "_circle-plus-_AtZGtgj.js",
+      "_eye-BbvsVSXa.js",
+      "_trash-2-D_SEweL6.js",
+      "_circle-alert-DYrdqRgD.js"
+    ]
+  },
+  "resources/js/Pages/Profile/Edit.jsx": {
+    "file": "assets/Edit-CWxqeUUx.js",
+    "name": "Edit",
+    "src": "resources/js/Pages/Profile/Edit.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_ApplicationLogo-DWGUCqbJ.js",
+      "_transition-DWlC--y0.js",
+      "resources/js/Pages/Profile/Partials/DeleteUserForm.jsx",
+      "resources/js/Pages/Profile/Partials/UpdatePasswordForm.jsx",
+      "resources/js/Pages/Profile/Partials/UpdateProfileInformationForm.jsx",
+      "_TextInput-d3kytuOU.js",
+      "_InputLabel-BwBMCYT9.js",
+      "_PrimaryButton-8o291emD.js"
+    ]
+  },
+  "resources/js/Pages/Profile/Partials/DeleteUserForm.jsx": {
+    "file": "assets/DeleteUserForm-BDtyZLJ9.js",
+    "name": "DeleteUserForm",
+    "src": "resources/js/Pages/Profile/Partials/DeleteUserForm.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_TextInput-d3kytuOU.js",
+      "_InputLabel-BwBMCYT9.js",
+      "_transition-DWlC--y0.js"
+    ]
+  },
+  "resources/js/Pages/Profile/Partials/UpdatePasswordForm.jsx": {
+    "file": "assets/UpdatePasswordForm-DlV8IJjK.js",
+    "name": "UpdatePasswordForm",
+    "src": "resources/js/Pages/Profile/Partials/UpdatePasswordForm.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_TextInput-d3kytuOU.js",
+      "_InputLabel-BwBMCYT9.js",
+      "_PrimaryButton-8o291emD.js",
+      "_transition-DWlC--y0.js"
+    ]
+  },
+  "resources/js/Pages/Profile/Partials/UpdateProfileInformationForm.jsx": {
+    "file": "assets/UpdateProfileInformationForm-EXlumaIo.js",
+    "name": "UpdateProfileInformationForm",
+    "src": "resources/js/Pages/Profile/Partials/UpdateProfileInformationForm.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_TextInput-d3kytuOU.js",
+      "_InputLabel-BwBMCYT9.js",
+      "_PrimaryButton-8o291emD.js",
+      "_transition-DWlC--y0.js"
+    ]
+  },
+  "resources/js/Pages/TaskDetails.jsx": {
+    "file": "assets/TaskDetails-Cot550S9.js",
+    "name": "TaskDetails",
+    "src": "resources/js/Pages/TaskDetails.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_AppLayout-DdE95dyF.js",
+      "_circle-alert-DYrdqRgD.js",
+      "_circle-check-big-_usF_w8l.js",
+      "_x-8DGeKDp6.js",
+      "_search-BQDiPUyu.js",
+      "_user-B8f7uQn2.js",
+      "_users-DR3S7fY7.js",
+      "_clock-DwtAG6FA.js",
+      "_calendar-gQqKnTfh.js",
+      "_createLucideIcon-Cc44qyyy.js",
+      "_trash-2-D_SEweL6.js"
+    ]
+  },
+  "resources/js/Pages/Tester.jsx": {
+    "file": "assets/Tester-FGJSJ3z6.js",
+    "name": "Tester",
+    "src": "resources/js/Pages/Tester.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_AppLayout-DdE95dyF.js",
+      "_search-BQDiPUyu.js",
+      "_users-DR3S7fY7.js",
+      "_clock-DwtAG6FA.js",
+      "_circle-check-big-_usF_w8l.js",
+      "_circle-plus-_AtZGtgj.js",
+      "_circle-alert-DYrdqRgD.js",
+      "_x-8DGeKDp6.js",
+      "_createLucideIcon-Cc44qyyy.js"
+    ]
+  },
+  "resources/js/Pages/Todo.jsx": {
+    "file": "assets/Todo-DmBYpm-n.js",
+    "name": "Todo",
+    "src": "resources/js/Pages/Todo.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_AppLayout-DdE95dyF.js",
+      "_createLucideIcon-Cc44qyyy.js",
+      "_clipboard-list-DbABM-v3.js",
+      "_trash-2-D_SEweL6.js",
+      "_calendar-gQqKnTfh.js",
+      "_clock-DwtAG6FA.js",
+      "_circle-check-big-_usF_w8l.js"
+    ]
+  },
+  "resources/js/Pages/Welcome.jsx": {
+    "file": "assets/Welcome-D4BVNfhe.js",
+    "name": "Welcome",
+    "src": "resources/js/Pages/Welcome.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "resources/js/app.jsx": {
+    "file": "assets/app-DeyD0YJM.js",
+    "name": "app",
+    "src": "resources/js/app.jsx",
+    "isEntry": true,
+    "dynamicImports": [
+      "resources/js/Pages/Auth/ConfirmPassword.jsx",
+      "resources/js/Pages/Auth/ForgotPassword.jsx",
+      "resources/js/Pages/Auth/Login.jsx",
+      "resources/js/Pages/Auth/Register.jsx",
+      "resources/js/Pages/Auth/ResetPassword.jsx",
+      "resources/js/Pages/Auth/VerifyEmail.jsx",
+      "resources/js/Pages/CalendarDashboard.jsx",
+      "resources/js/Pages/Chat.jsx",
+      "resources/js/Pages/Client.jsx",
+      "resources/js/Pages/Developer.jsx",
+      "resources/js/Pages/FrontendDevelopers.jsx",
+      "resources/js/Pages/Manager.jsx",
+      "resources/js/Pages/Profile/Edit.jsx",
+      "resources/js/Pages/Profile/Partials/DeleteUserForm.jsx",
+      "resources/js/Pages/Profile/Partials/UpdatePasswordForm.jsx",
+      "resources/js/Pages/Profile/Partials/UpdateProfileInformationForm.jsx",
+      "resources/js/Pages/TaskDetails.jsx",
+      "resources/js/Pages/Tester.jsx",
+      "resources/js/Pages/Todo.jsx",
+      "resources/js/Pages/Welcome.jsx"
+    ],
+    "css": [
+      "assets/app-BziQYoJm.css"
+    ]
+  }
+}
