@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { router, usePage } from "@inertiajs/react";
 import AppLayout from "@/Layouts/AppLayout";
 import {
@@ -9,16 +9,15 @@ import {
   AlertCircle,
   Trash2,
   Eye,
+  PauseCircle,
 } from "lucide-react";
-
-const getEmployeeName = (task, employees) =>
-  employees.find((e) => e.id === task.employeeId)?.name || "";
 
 const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: initialClients, flash }) => {
   const [tasks, setTasks] = useState(initialTasks || []);
   const [employees, setEmployees] = useState(initialEmployees || []);
   const [clients, setClients] = useState(initialClients || []);
-  const [filter, setFilter] = useState({ category: "", client: "" }); // Removed subCategory
+  const [filter, setFilter] = useState({ category: "", client: "" });
+
   const [newTask, setNewTask] = useState({
     task: "",
     employeeId: "",
@@ -26,48 +25,102 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
     due: "",
     expectedTimeline: "",
   });
+
   const [newEmployee, setNewEmployee] = useState({
     name: "",
-    category: "Frontend Developers", // Default to Frontend
+    category: "",
+    subCategory: "",
     manager: "",
+    password: "", // <-- NEW: password field
   });
+
   const [newClient, setNewClient] = useState("");
 
-  const filteredTasks = tasks.filter((t) => {
-    const emp = employees.find((e) => e.id === t.employeeId);
-    const catMatch = filter.category === "" || emp?.category === filter.category;
-    const clientMatch = filter.client === "" || t.client === filter.client;
-    return catMatch && clientMatch;
-  });
+  // Predefined categories
+  const categories = [
+    "Frontend Developers",
+    "Backend Developers",
+    "Full Stack Developers",
+    "QA Engineers",
+    "DevOps",
+    "UI/UX Designers",
+    "Project Managers",
+  ];
+
+  // Dynamic unique categories from employees
+  const availableCategories = useMemo(() => {
+    return [...new Set(employees.map(e => e.category).filter(Boolean))].sort();
+  }, [employees]);
+
+  // Filter tasks
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((t) => {
+      const emp = employees.find((e) => e.id === t.employeeId);
+      const catMatch = !filter.category || emp?.category === filter.category;
+      const clientMatch = !filter.client || t.client === filter.client;
+      return catMatch && clientMatch;
+    });
+  }, [tasks, employees, filter]);
+
+  const getEmployeeName = (task, employees) =>
+    employees.find((e) => e.id === task.employeeId)?.name || "Unknown";
+
+  const getEmployeeCategory = (task, employees) =>
+    employees.find((e) => e.id === task.employeeId)?.category || "";
 
   // Add Task
   const handleAddTask = () => {
     if (newTask.task && newTask.employeeId && newTask.client && newTask.due) {
-      router.post("/manager/add-task", {
-        task: newTask.task,
-        employee_id: newTask.employeeId,
-        client: newTask.client,
-        due: newTask.due,
-        expected_timeline: newTask.expectedTimeline || null,
-      }, {
-        onSuccess: () => {
-          setNewTask({ task: "", employeeId: "", client: "", due: "", expectedTimeline: "" });
+      router.post(
+        "/manager/add-task",
+        {
+          task: newTask.task,
+          employee_id: newTask.employeeId,
+          client: newTask.client,
+          due: newTask.due,
+          expected_timeline: newTask.expectedTimeline || null,
         },
-      });
+        {
+          onSuccess: () => {
+            setNewTask({ task: "", employeeId: "", client: "", due: "", expectedTimeline: "" });
+          },
+        }
+      );
     }
   };
 
-  // Add Employee
+  // Add Employee (now includes password)
   const handleAddEmployee = () => {
-    if (newEmployee.name && newEmployee.manager) {
-      router.post("/manager/add-employee", {
-        ...newEmployee,
-        category: "Frontend Developers", // Force category
-      }, {
-        onSuccess: () => {
-          setNewEmployee({ name: "", category: "Frontend Developers", manager: "" });
+    if (
+      newEmployee.name &&
+      newEmployee.category &&
+      newEmployee.manager &&
+      newEmployee.password &&
+      newEmployee.password.length >= 6
+    ) {
+      router.post(
+        "/manager/add-employee",
+        {
+          name: newEmployee.name,
+          category: newEmployee.category,
+          subCategory: newEmployee.subCategory || null,
+          manager: newEmployee.manager,
+          password: newEmployee.password, // <-- send password
         },
-      });
+        {
+          onSuccess: () => {
+            setNewEmployee({
+              name: "",
+              category: "",
+              subCategory: "",
+              manager: "",
+              password: "",
+            });
+          },
+        }
+      );
+    } else {
+      alert("Password must be at least 6 characters.");
     }
   };
 
@@ -75,14 +128,18 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
   const handleAddClient = () => {
     const trimmedClient = newClient.trim();
     if (trimmedClient) {
-      router.post("/manager/add-client", { name: trimmedClient }, {
-        onSuccess: () => setNewClient(""),
-      });
+      router.post(
+        "/manager/add-client",
+        { name: trimmedClient },
+        {
+          onSuccess: () => setNewClient(""),
+        }
+      );
     }
   };
 
   const handleDeleteTask = (id) => {
-    if (confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
+    if (confirm("Are you sure you want to delete this task? This action cannot be undone.")) {
       router.delete(`/manager/task/${id}`);
     }
   };
@@ -95,6 +152,8 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
         return <Clock className="w-4 h-4 text-yellow-600" />;
       case "In Progress":
         return <AlertCircle className="w-4 h-4 text-blue-600" />;
+      case "On Hold":
+        return <PauseCircle className="w-4 h-4 text-orange-600" />;
       default:
         return <Clock className="w-4 h-4" />;
     }
@@ -108,6 +167,8 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
         return "bg-yellow-100 text-yellow-800 border-yellow-200";
       case "In Progress":
         return "bg-blue-100 text-blue-800 border-blue-200";
+      case "On Hold":
+        return "bg-orange-100 text-orange-800 border-orange-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
@@ -115,10 +176,10 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
 
   return (
     <AppLayout>
-      <div className="min-h-screen bg-gray-50 p-8 space-y-4">
+      <div className="min-h-screen bg-gray-50 p-8 space-y-6">
         {/* Flash Message */}
         {flash?.success && (
-          <div className="bg-green-100 text-green-800 p-3 rounded-md mb-4">
+          <div className="bg-green-100 text-green-800 p-3 rounded-md mb-4 animate-fade-in">
             {flash.success}
           </div>
         )}
@@ -128,23 +189,19 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
             Manager Dashboard
           </h1>
           <div className="flex gap-3">
-            {/* Simplified Category Filter: Only All & Frontend Developers */}
             <select
               value={filter.category}
-              onChange={(e) => {
-                const val = e.target.value;
-                setFilter({ ...filter, category: val });
-                if (val === "Frontend Developers") {
-                  router.visit("/employees/all");
-                }
-              }}
+              onChange={(e) => setFilter({ ...filter, category: e.target.value })}
               className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">All Employees</option>
-              <option value="Frontend Developers">Tap to View</option>
+              <option value="">All Categories</option>
+              {availableCategories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
             </select>
 
-            {/* Client Filter */}
             <select
               value={filter.client}
               onChange={(e) => setFilter({ ...filter, client: e.target.value })}
@@ -152,21 +209,29 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
             >
               <option value="">All Clients</option>
               {clients.map((c) => (
-                <option key={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
           </div>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* 4 CARDS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             ["Total Tasks", tasks.length, "from-blue-500 to-blue-600", <Users size={24} />],
             [
-              "Pending/In Progress",
-              tasks.filter((t) => t.status === "Pending" || t.status === "In Progress").length,
-              "from-yellow-500 to-yellow-600",
-              <Clock size={24} />,
+              "Pending / In Progress",
+              tasks.filter((t) => ["Pending", "In Progress"].includes(t.status)).length,
+              "from-cyan-500 to-blue-600",
+              <Clock size={24} className="text-white/80" />,
+            ],
+            [
+              "On Hold",
+              tasks.filter((t) => t.status === "On Hold").length,
+              "from-orange-500 to-orange-600",
+              <PauseCircle size={24} className="text-white/80" />,
             ],
             [
               "Finished",
@@ -177,25 +242,22 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
           ].map(([label, count, color, icon]) => (
             <div
               key={label}
-              className={`bg-gradient-to-br ${color} text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`}
+              className={`bg-gradient-to-br ${color} text-white p-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center justify-center text-center`}
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="font-semibold text-sm opacity-90">{label}</h2>
-                  <p className="text-3xl font-bold mt-2">{count}</p>
-                </div>
-                <div className="p-3 bg-white/10 rounded-full">{icon}</div>
-              </div>
+              <div className="p-2 bg-white/10 rounded-full mb-2">{icon}</div>
+              <h2 className="font-semibold text-xs opacity-90">{label}</h2>
+              <p className="text-2xl font-bold mt-1">{count}</p>
             </div>
           ))}
         </div>
 
-        {/* Add New Employee - Only Frontend Developers */}
+        {/* Add New Employee */}
         <div className="p-6 bg-white shadow-lg rounded-xl border border-gray-100">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-800">
-            <Users className="text-green-500" size={24} /> Add New Frontend Developer
+            <Users className="text-green-500" size={24} /> Add New Employee
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+            {/* Name */}
             <input
               type="text"
               placeholder="Employee Name"
@@ -203,13 +265,31 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
               onChange={(e) => setNewEmployee({ ...newEmployee, name: e.target.value })}
               className="border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
+
+            {/* Category */}
+            <select
+              value={newEmployee.category}
+              onChange={(e) => setNewEmployee({ ...newEmployee, category: e.target.value })}
+              className="border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            >
+              <option value="">Select Category</option>
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+
+            {/* Sub-category */}
             <input
               type="text"
-              placeholder="Category"
-              value="Frontend Developers"
-              disabled
-              className="border border-gray-300 p-3 rounded-lg bg-gray-50 text-gray-500"
+              placeholder="Sub-category (optional)"
+              value={newEmployee.subCategory}
+              onChange={(e) => setNewEmployee({ ...newEmployee, subCategory: e.target.value })}
+              className="border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
+
+            {/* Manager */}
             <input
               type="text"
               placeholder="Manager Name"
@@ -217,13 +297,25 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
               onChange={(e) => setNewEmployee({ ...newEmployee, manager: e.target.value })}
               className="border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
+
+            {/* Password */}
+            <input
+              type="password"
+              placeholder="Password (min 6 chars)"
+              value={newEmployee.password}
+              onChange={(e) => setNewEmployee({ ...newEmployee, password: e.target.value })}
+              className="border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+
+            {/* Submit */}
             <button
               onClick={handleAddEmployee}
               className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-all duration-200 font-medium flex items-center gap-2 shadow-md hover:shadow-lg"
             >
-              <PlusCircle size={18} /> Add Developer
+              <PlusCircle size={18} /> Add Employee
             </button>
           </div>
+
         </div>
 
         {/* Add New Client */}
@@ -261,20 +353,20 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
               onChange={(e) => setNewTask({ ...newTask, task: e.target.value })}
               className="border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
+
             <select
               value={newTask.employeeId}
               onChange={(e) => setNewTask({ ...newTask, employeeId: e.target.value })}
               className="border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">Select Frontend Developer</option>
-              {employees
-                .filter(e => e.category === "Frontend Developers")
-                .map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {e.name}
-                  </option>
-                ))}
+              <option value="">Select Employee</option>
+              {employees.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.name} ({e.category})
+                </option>
+              ))}
             </select>
+
             <select
               value={newTask.client}
               onChange={(e) => setNewTask({ ...newTask, client: e.target.value })}
@@ -282,9 +374,12 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
             >
               <option value="">Select Client</option>
               {clients.map((c) => (
-                <option key={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
+
             <input
               type="date"
               placeholder="Manager Timeline"
@@ -292,6 +387,7 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
               onChange={(e) => setNewTask({ ...newTask, due: e.target.value })}
               className="border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
+
             <input
               type="date"
               placeholder="Expected Timeline"
@@ -299,6 +395,7 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
               onChange={(e) => setNewTask({ ...newTask, expectedTimeline: e.target.value })}
               className="border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
+
             <button
               onClick={handleAddTask}
               className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 font-medium flex items-center gap-2 shadow-md hover:shadow-lg"
@@ -314,7 +411,7 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  {["Client", "Employee", "Task", "Status", "Manager Timeline", "Developer Timeline", "Testing", "Action"].map(
+                  {["Client", "Employee", "Category", "Task", "Status", "Manager Timeline", "Developer Timeline", "Testing", "Action"].map(
                     (h) => (
                       <th
                         key={h}
@@ -333,7 +430,10 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
                     <td className="px-6 py-4 whitespace-nowrap text-gray-700">
                       {getEmployeeName(t, employees)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-700">{t.task}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
+                      {getEmployeeCategory(t, employees)}
+                    </td>
+                    <td className="px-6 py-4 text-gray-700">{t.task}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(
@@ -341,7 +441,7 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
                         )}`}
                       >
                         {getStatusIcon(t.status)}
-                        {t.status}
+                        <span className="ml-1">{t.status}</span>
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-gray-700">{t.due}</td>
@@ -392,4 +492,4 @@ const Manager = ({ employees: initialEmployees, tasks: initialTasks, clients: in
   );
 };
 
-export default Manager; 
+export default Manager;

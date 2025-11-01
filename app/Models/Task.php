@@ -1,6 +1,5 @@
 <?php
 
-// app/Models/Task.php (updated with testingPoints relationship)
 
 namespace App\Models;
 
@@ -18,6 +17,7 @@ class Task extends Model
         'status',
         'due',
         'expected_timeline',
+        'user_id',
     ];
 
     protected $casts = [
@@ -44,5 +44,9 @@ class Task extends Model
     {
         return $this->hasMany(TestingPoint::class);
     }
-    //
+    // Relationship to the user who created the task
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

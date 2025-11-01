@@ -1,308 +1,237 @@
 import React, { useState } from 'react';
-import { router, usePage } from '@inertiajs/inertia-react';
+import { Head } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+export default function Developer({ developers, summary }) {
+    const [expandedDevelopers, setExpandedDevelopers] = useState({});
+    const [filterStatus, setFilterStatus] = useState('all');
+    const [searchTerm, setSearchTerm] = useState('');
 
-const Developer = ({ tasks: initialTasks, employees: initialEmployees, flash }) => {
-  const [tasks, setTasks] = useState(initialTasks || []);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [filter, setFilter] = useState({ subCategory: "" });
-  const [expandedTask, setExpandedTask] = useState(null);
+    const toggleDeveloper = (developerId) => {
+        setExpandedDevelopers(prev => ({
+            ...prev,
+            [developerId]: !prev[developerId]
+        }));
+    };
 
-  const frontendDevs = initialEmployees.filter(e => e.subCategory === "Frontend").map(e => e.name);
-  const backendDevs = initialEmployees.filter(e => e.subCategory === "Backend").map(e => e.name);
+    const getStatusColor = (status) => {
+        const colors = {
+            'active': 'bg-blue-100 text-blue-800',
+            'completed': 'bg-green-100 text-green-800',
+            'pending': 'bg-yellow-100 text-yellow-800',
+            'on-hold': 'bg-gray-100 text-gray-800',
+        };
+        return colors[status?.toLowerCase()] || 'bg-gray-100 text-gray-800';
+    };
 
-  // Filter tasks based on subCategory
-  const devTasks = filter.subCategory === "" 
-    ? tasks 
-    : filter.subCategory === "Frontend" 
-      ? tasks.filter(t => frontendDevs.includes(t.developer))
-      : tasks.filter(t => backendDevs.includes(t.developer));
-
-  // Update developer remark (local + save on blur)
-  const handleRemarkChange = (id, value) => {
-    setTasks(tasks.map(t => (t.id === id ? { ...t, devRemark: value } : t)));
-  };
-
-  const handleRemarkBlur = (id, value) => {
-    router.put(`/developer/task/${id}`, { devRemark: value }, {
-      preserveState: true,
-      preserveScroll: true,
+    const filteredDevelopers = developers.filter(dev => {
+        const matchesSearch = dev.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            dev.tasks.some(task => task.task.toLowerCase().includes(searchTerm.toLowerCase()));
+        
+        if (filterStatus === 'all') return matchesSearch;
+        if (filterStatus === 'with-tasks') return matchesSearch && dev.total_tasks > 0;
+        if (filterStatus === 'no-tasks') return matchesSearch && dev.total_tasks === 0;
+        return matchesSearch;
     });
-  };
 
-  // Mark task as completed (local + save)
-  const handleComplete = (id) => {
-    const today = new Date().toISOString().split('T')[0];
-    setTasks(tasks.map(t => (t.id === id ? { ...t, status: 'Completed', deliveredDate: today } : t)));
-    router.put(`/developer/task/${id}`, { status: 'Completed', delivered_date: today }, {
-      preserveState: true,
-      preserveScroll: true,
-    });
-  };
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    };
 
-  // Helper for badge color
-  const getStatusColor = (status) => {
-    if (status === 'Completed') return 'bg-green-500';
-    if (status === 'In Progress') return 'bg-blue-500';
-    if (status === 'Pending') return 'bg-yellow-500';
-    return 'bg-gray-500';
-  };
+    const isOverdue = (dueDate) => {
+        if (!dueDate) return false;
+        return new Date(dueDate) < new Date();
+    };
 
-  // Toggle task dropdown
-  const toggleTaskDropdown = (taskId) => {
-    setExpandedTask(expandedTask === taskId ? null : taskId);
-  };
-
-  // Build a simple month calendar
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth();
-  const firstDay = new Date(year, month, 1);
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-  const days = Array.from({ length: daysInMonth }, (_, i) => {
-    const date = new Date(year, month, i + 1);
-    const dayTasks = devTasks.filter(
-      (task) => task.due && new Date(task.due).toDateString() === date.toDateString()
-    );
-    return { date, tasks: dayTasks };
-  });
-
-  const tasksForSelectedDate =
-    selectedDate &&
-    devTasks.filter(
-      (task) => task.due && new Date(task.due).toDateString() === selectedDate.toDateString()
-    );
-
-  return (
-    <AppLayout>
-      <div className="p-6 bg-gray-100 min-h-screen">
-        {/* Flash Message */}
-        {flash?.success && (
-          <div className="bg-green-100 text-green-800 p-3 rounded-md mb-4">
-            {flash.success}
-          </div>
-        )}
-
-        <h1 className="text-3xl font-bold mb-6 text-[#6D93CD]">
-          Developers Dashboard
-        </h1>
-
-        {/* Filter Dropdown */}
-        <div className="flex gap-3 mb-6">
-          <select
-            value={filter.subCategory || ""}
-            onChange={(e) => {
-              const val = e.target.value;
-              setFilter({ ...filter, subCategory: val });
-              if (val === "Frontend") {
-                router.visit("/employees/frontend");
-              } else if (val === "Backend") {
-                router.visit("/employees/backend");
-              }
-            }}
-            className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Developers</option>
-            <option value="Frontend">Frontend Developers</option>
-            <option value="Backend">Backend Developers</option>
-          </select>
-        </div>
-
-        {/* Calendar Section */}
-        <div className="bg-white rounded-lg shadow-lg p-4 mb-10">
-          <h2 className="text-xl font-semibold mb-4 text-gray-700">
-            Task Calendar - {today.toLocaleString('default', { month: 'long' })} {year}
-          </h2>
-
-          {/* Weekday Header */}
-          <div className="grid grid-cols-7 text-center font-medium text-gray-600 mb-2">
-            {weekDays.map((day) => (
-              <div key={day}>{day}</div>
-            ))}
-          </div>
-
-          {/* Calendar Days */}
-          <div className="grid grid-cols-7 gap-2">
-            {days.map(({ date, tasks: dayTasks }) => (
-              <div
-                key={date}
-                onClick={() => setSelectedDate(date)}
-                className={`cursor-pointer p-2 border rounded-lg text-center transition-all ${
-                  dayTasks.length > 0
-                    ? 'bg-[#6D93CD] text-white hover:bg-[#5b82b8]'
-                    : 'bg-gray-50 hover:bg-gray-100'
-                }`}
-              >
-                <div className="font-semibold">{date.getDate()}</div>
-                {dayTasks.length > 0 && (
-                  <div className="text-xs mt-1">{dayTasks.length} Task(s)</div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* All Developers Section */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-10">
-          <h2 className="text-2xl font-semibold mb-4 text-[#6D93CD]">
-            All Developers
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from(new Set(devTasks.map(t => t.developer))).map((dev) => {
-              const developerTasks = devTasks.filter(t => t.developer === dev);
-              const completed = developerTasks.filter(t => t.status === 'Completed').length;
-              const inProgress = developerTasks.filter(t => t.status === 'In Progress').length;
-              const pending = developerTasks.filter(t => t.status === 'Pending').length;
-              const devType = frontendDevs.includes(dev) ? 'Frontend' : 'Backend';
-              
-              return (
-                <div key={dev} className="border rounded-lg p-4 bg-gradient-to-br from-blue-50 to-white hover:shadow-lg transition-shadow">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-xl font-bold text-gray-800">{dev}</h3>
-                    <span className="text-xs px-2 py-1 bg-[#6D93CD] text-white rounded-full">
-                      {devType}
-                    </span>
-                  </div>
-                  
-                  <div className="space-y-2 mb-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Total Tasks:</span>
-                      <span className="font-semibold text-gray-800">{developerTasks.length}</span>
+    return (
+        <>
+            <AppLayout>
+            <Head title="Developers Dashboard" />
+            
+            <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-7xl mx-auto">
+                    {/* Header */}
+                    <div className="mb-8">
+                        <h1 className="text-3xl font-bold text-gray-900">Developers Dashboard</h1>
+                        <p className="mt-2 text-gray-600">Overview of all developers and their assigned projects</p>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Completed:</span>
-                      <span className="font-semibold text-green-600">{completed}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">In Progress:</span>
-                      <span className="font-semibold text-blue-600">{inProgress}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Pending:</span>
-                      <span className="font-semibold text-yellow-600">{pending}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="pt-3 border-t">
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Recent Tasks:</h4>
-                    <div className="space-y-2">
-                      {developerTasks.slice(0, 3).map(task => (
-                        <div key={task.id} className="text-xs">
-                          <div 
-                            className="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-1 rounded"
-                            onClick={() => toggleTaskDropdown(task.id)}
-                          >
-                            <div className="flex items-center gap-2 flex-1">
-                              <span className={`w-2 h-2 rounded-full ${getStatusColor(task.status)}`}></span>
-                              <span className="truncate text-gray-600">{task.task}</span>
-                            </div>
-                            <span className="text-gray-400 ml-2">
-                              {expandedTask === task.id ? '▲' : '▼'}
-                            </span>
-                          </div>
-                          
-                          {expandedTask === task.id && (
-                            <div className="ml-4 mt-1 p-2 bg-gray-50 rounded text-xs space-y-1">
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Timeline Given by Manager:</span>
-                                <span className="font-semibold text-blue-600">{task.projectedTimeline}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Project Completed On:</span>
-                                <span className={`font-semibold ${task.deliveredDate ? 'text-green-600' : 'text-gray-400'}`}>
-                                  {task.deliveredDate || 'Not Completed'}
-                                </span>
-                              </div>
-                            </div>
-                          )}
+
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+                        <div className="bg-white rounded-lg shadow p-6">
+                            <div className="text-sm font-medium text-gray-500">Total Developers</div>
+                            <div className="mt-2 text-3xl font-bold text-gray-900">{summary.total_developers}</div>
                         </div>
-                      ))}
+                        <div className="bg-white rounded-lg shadow p-6">
+                            <div className="text-sm font-medium text-gray-500">Total Tasks</div>
+                            <div className="mt-2 text-3xl font-bold text-gray-900">{summary.total_tasks}</div>
+                        </div>
+                        <div className="bg-white rounded-lg shadow p-6">
+                            <div className="text-sm font-medium text-gray-500">Active Tasks</div>
+                            <div className="mt-2 text-3xl font-bold text-blue-600">{summary.total_active_tasks}</div>
+                        </div>
+                        <div className="bg-white rounded-lg shadow p-6">
+                            <div className="text-sm font-medium text-gray-500">Completed Tasks</div>
+                            <div className="mt-2 text-3xl font-bold text-green-600">{summary.total_completed_tasks}</div>
+                        </div>
+                        <div className="bg-white rounded-lg shadow p-6">
+                            <div className="text-sm font-medium text-gray-500">With Active Work</div>
+                            <div className="mt-2 text-3xl font-bold text-gray-900">{summary.developers_with_tasks}</div>
+                        </div>
                     </div>
-                  </div>
+
+                    {/* Filters */}
+                    <div className="bg-white rounded-lg shadow mb-6 p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                                <input
+                                    type="text"
+                                    placeholder="Search by developer or task name..."
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Status</label>
+                                <select
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    value={filterStatus}
+                                    onChange={(e) => setFilterStatus(e.target.value)}
+                                >
+                                    <option value="all">All Developers</option>
+                                    <option value="with-tasks">With Tasks</option>
+                                    <option value="no-tasks">Without Tasks</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Developers List */}
+                    <div className="space-y-4">
+                        {filteredDevelopers.length === 0 ? (
+                            <div className="bg-white rounded-lg shadow p-8 text-center">
+                                <p className="text-gray-500">No developers found matching your criteria.</p>
+                            </div>
+                        ) : (
+                            filteredDevelopers.map((developer) => (
+                                <div key={developer.id} className="bg-white rounded-lg shadow overflow-hidden">
+                                    {/* Developer Header */}
+                                    <div 
+                                        className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+                                        onClick={() => toggleDeveloper(developer.id)}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex-1">
+                                                <div className="flex items-center space-x-4">
+                                                    <div className="h-12 w-12 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-lg">
+                                                        {developer.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="text-lg font-semibold text-gray-900">{developer.name}</h3>
+                                                        <div className="flex items-center space-x-3 mt-1">
+                                                            {developer.sub_category && (
+                                                                <span className="text-sm text-gray-500">{developer.sub_category}</span>
+                                                            )}
+                                                            {developer.manager && (
+                                                                <span className="text-sm text-gray-500">Manager: {developer.manager}</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center space-x-6">
+                                                <div className="text-center">
+                                                    <div className="text-2xl font-bold text-gray-900">{developer.total_tasks}</div>
+                                                    <div className="text-xs text-gray-500">Total</div>
+                                                </div>
+                                                <div className="text-center">
+                                                    <div className="text-2xl font-bold text-blue-600">{developer.active_tasks}</div>
+                                                    <div className="text-xs text-gray-500">Active</div>
+                                                </div>
+                                                <div className="text-center">
+                                                    <div className="text-2xl font-bold text-green-600">{developer.completed_tasks}</div>
+                                                    <div className="text-xs text-gray-500">Done</div>
+                                                </div>
+                                                <svg 
+                                                    className={`w-6 h-6 text-gray-400 transition-transform ${expandedDevelopers[developer.id] ? 'transform rotate-180' : ''}`}
+                                                    fill="none" 
+                                                    stroke="currentColor" 
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Tasks List */}
+                                    {expandedDevelopers[developer.id] && (
+                                        <div className="border-t border-gray-200 bg-gray-50 p-6">
+                                            {developer.tasks.length === 0 ? (
+                                                <p className="text-gray-500 text-center py-4">No tasks assigned</p>
+                                            ) : (
+                                                <div className="space-y-3">
+                                                    {developer.tasks.map((task) => (
+                                                        <div key={task.id} className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+                                                            <div className="flex items-start justify-between">
+                                                                <div className="flex-1">
+                                                                    <div className="flex items-center space-x-3 mb-2">
+                                                                        <h4 className="font-medium text-gray-900">{task.task}</h4>
+                                                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                                                                            {task.status}
+                                                                        </span>
+                                                                        {isOverdue(task.due) && task.status !== 'completed' && (
+                                                                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                                                Overdue
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+                                                                        {task.client && (
+                                                                            <div className="flex items-center space-x-2">
+                                                                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                                                </svg>
+                                                                                <span className="text-sm text-gray-600">Client: {task.client.name}</span>
+                                                                            </div>
+                                                                        )}
+                                                                        <div className="flex items-center space-x-2">
+                                                                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                            </svg>
+                                                                            <span className="text-sm text-gray-600">Due: {formatDate(task.due)}</span>
+                                                                        </div>
+                                                                        <div className="flex items-center space-x-2">
+                                                                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                            </svg>
+                                                                            <span className="text-sm text-gray-600">Expected: {formatDate(task.expected_timeline)}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    {task.detail && (
+                                                                        <div className="mt-3 text-sm text-gray-600">
+                                                                            <p>{task.detail.description || 'No additional details'}</p>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            ))
+                        )}
+                    </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Selected Date Tasks */}
-        {selectedDate && (
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4 text-[#6D93CD]">
-              Tasks for {selectedDate.toDateString()}
-            </h2>
-
-            {tasksForSelectedDate.length === 0 ? (
-              <p className="text-gray-600">No tasks for this day.</p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {tasksForSelectedDate.map((task) => (
-                  <div
-                    key={task.id}
-                    className="border rounded-lg shadow p-4 bg-white flex flex-col justify-between"
-                  >
-                    <div className="mb-4">
-                      <h2 className="text-xl font-semibold mb-2">{task.task}</h2>
-                      <p className="text-gray-600 mb-1">
-                        <span className="font-medium">Developer:</span> {task.developer}
-                      </p>
-                      <p className="text-gray-600 mb-1">
-                        <span className="font-medium">Client:</span> {task.client}
-                      </p>
-                      <p className="text-gray-600 mb-1">
-                        <span className="font-medium">Projected Timeline:</span> {task.projectedTimeline}
-                      </p>
-                      <p className="text-gray-600 mb-1">
-                        <span className="font-medium">Delivered Date:</span> {task.deliveredDate || 'Not Delivered'}
-                      </p>
-                      <p
-                        className={`mb-1 inline-block px-2 py-1 text-white rounded ${getStatusColor(
-                          task.status
-                        )}`}
-                      >
-                        {task.status}
-                      </p>
-                      <p className="text-sm text-gray-500">Due: {task.due}</p>
-                    </div>
-
-                    <div className="mt-2 flex flex-col gap-2">
-                      <div>
-                        <label className="block text-sm font-medium mb-1">
-                          Developer Remark
-                        </label>
-                        <textarea
-                          value={task.devRemark}
-                          placeholder="Add your remark"
-                          onChange={(e) =>
-                            handleRemarkChange(task.id, e.target.value)
-                          }
-                          onBlur={(e) => handleRemarkBlur(task.id, e.target.value)}
-                          className="w-full border rounded p-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6D93CD]"
-                          rows={3}
-                        />
-                      </div>
-                      {task.status !== 'Completed' && (
-                        <button
-                          onClick={() => handleComplete(task.id)}
-                          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
-                        >
-                          Mark Completed
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </AppLayout>
-  );
-};
-
-export default Developer;
+            </div>
+            
+        </AppLayout>
+        </>
+    );
+}

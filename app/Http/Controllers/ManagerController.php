@@ -1,6 +1,5 @@
 <?php
 
-// app/Http/Controllers/ManagerController.php (updated show method to include testingPoints)
 
 namespace App\Http\Controllers;
 
@@ -11,6 +10,9 @@ use App\Models\Employee;
 use App\Models\Client;
 use App\Models\TaskDetail;
 use App\Models\TestingPoint;
+use App\Models\User;        
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class ManagerController extends Controller
 {
@@ -125,70 +127,88 @@ class ManagerController extends Controller
         ]);
     }
 
-    public function update(Request $request, $id)
-    {
-        $task = Task::findOrFail($id);
-        $detail = $task->detail ?? new TaskDetail();
-        $detail->task_id = $task->id;
+ public function update(Request $request, $id)
+{
+    $task = Task::findOrFail($id);
 
-        $validated = $request->validate([
-            'status' => 'required|in:Pending,In Progress,On Hold,Finished',
-            'devRemark' => 'nullable|string|max:1000',
-            'clientRemark' => 'nullable|string|max:1000',
-            'overallRemark' => 'nullable|string|max:1000',
-            'managerRemarks' => 'nullable|array|max:3',
-            'documents' => 'nullable|array',
-        ]);
+    // Validate input
+    $validated = $request->validate([
+        'status' => 'required|in:Pending,In Progress,On Hold,Finished',
+        'devRemark' => 'nullable|string|max:1000',
+        'clientRemark' => 'nullable|string|max:1000',
+        'overallRemark' => 'nullable|string|max:1000',
+        'managerRemarks' => 'nullable|array|max:3',
+        'managerRemarks.*' => 'nullable|string|max:500',
+        'documents' => 'nullable|array',
+        'documents.*.name' => 'required_with:documents|string|max:255',
+        'documents.*.note' => 'nullable|string|max:1000',
+        'testingPoints' => 'nullable|array',
+        'testingPoints.*.id' => 'required|exists:testing_points,id',
+        'testingPoints.*.managerRemark' => 'nullable|string|max:1000',
+    ]);
 
-        $task->update([
-            'status' => $validated['status'],
-        ]);
+    // 1. Update Task status
+    $task->update([
+        'status' => $validated['status'],
+    ]);
 
-        $detail->updateOrCreate(
-            ['task_id' => $id],
-            [
-                'dev_remark' => $validated['devRemark'] ?? $detail->dev_remark,
-                'client_remark' => $validated['clientRemark'] ?? $detail->client_remark,
-                'overall_remark' => $validated['overallRemark'],
-                'manager_remarks' => $validated['managerRemarks'],
-                'documents' => $validated['documents'],
-            ]
-        );
+    // 2. Update TaskDetail
+    $detail = $task->detail ?? new TaskDetail(['task_id' => $task->id]);
+    $detail->fill([
+        'dev_remark' => $validated['devRemark'] ?? $detail->dev_remark,
+        'client_remark' => $validated['clientRemark'] ?? $detail->client_remark,
+        'manager_remarks' => $validated['managerRemarks'] ?? $detail->manager_remarks,
+        'overall_remark' => $validated['overallRemark'] ?? $detail->overall_remark,
+        'documents' => $validated['documents'] ?? $detail->documents,
+    ]);
+    $detail->save();
 
-        // Update manager remarks for testing points if provided
-        if ($request->has('testingPoints')) {
-            foreach ($validated['testingPoints'] ?? [] as $point) {
-                if (isset($point['managerRemark'])) {
-                    TestingPoint::where('id', $point['id'])->update([
-                        'manager_remark' => $point['managerRemark'],
-                    ]);
-                }
+    // 3. Update Testing Points (manager remarks only)
+    if (!empty($validated['testingPoints'])) {
+        foreach ($validated['testingPoints'] as $pointData) {
+            if (isset($pointData['id']) && isset($pointData['managerRemark'])) {
+                TestingPoint::where('id', $pointData['id'])
+                    ->where('task_id', $task->id)
+                    ->update(['manager_remark' => $pointData['managerRemark']]);
             }
         }
-
-        $request->session()->flash('success', 'Task details updated successfully!');
-
-        return $this->show($id);
     }
 
-    public function storeEmployee(Request $request)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'category' => 'required|string|max:255',
-            'subCategory' => 'nullable|string|max:255',
-            'manager' => 'required|string|max:255',
-        ]);
+    return redirect()->back()->with('success', 'Task updated successfully!');
+}
 
-        \App\Models\Employee::create([
-            'name' => $validated['name'],
-            'category' => $validated['category'],
-            'sub_category' => $validated['subCategory'] ?? null,
-            'manager' => $validated['manager'],
-        ]);
+   public function storeEmployee(Request $request)
+{
+    $validated = $request->validate([
+        'name'        => 'required|string|max:255',
+        'category'    => 'required|string|max:255',
+        'subCategory' => 'nullable|string|max:255',
+        'manager'     => 'required|string|max:255',
+        'password'    => 'required|string|min:6',           // <-- new
+    ]);
 
-        return redirect()->route('manager.index')->with('success', 'Employee added successfully!');
-    }
+    // 1. Create the User (role = Developer, dummy e-mail)
+    $user = User::create([
+        'name'     => $validated['name'],
+        'email'    => 'test@gmail.com',               // fixed e-mail
+        'password' => Hash::make($validated['password']),
+        'role'     => 'Developer',
+    ]);
+
+    // 2. Create the Employee record (link to the new user if you want)
+    Employee::create([
+        'name'        => $validated['name'],
+        'category'    => $validated['category'],
+        'sub_category'=> $validated['subCategory'] ?? null,
+        'manager'     => $validated['manager'],
+        // optional: keep a reference to the user
+        // 'user_id'  => $user->id,
+    ]);
+
+    return redirect()
+        ->route('manager.index')
+        ->with('success', 'Employee (and developer account) added successfully!');
+}
 
     public function storeClient(Request $request)
     {
@@ -203,32 +223,35 @@ class ManagerController extends Controller
         return redirect()->route('manager.index')->with('success', 'Client added successfully!');
     }
 
-    public function storeTask(Request $request)
-    {
-        $validated = $request->validate([
-            'task' => 'required|string|max:255',
-            'employee_id' => 'required|exists:employees,id',
-            'client' => 'required|string|max:255',
-            'due' => 'nullable|date',
-            'expected_timeline' => 'nullable|date',
-        ]);
+  public function storeTask(Request $request)
+{
+    $validated = $request->validate([
+        'task'               => 'required|string|max:255',
+        'employee_id'        => 'required|exists:employees,id',
+        'client'             => 'required|string|max:255',
+        'due'                => 'nullable|date',
+        'expected_timeline'  => 'nullable|date',
+    ]);
 
-        $client = \App\Models\Client::firstOrCreate(
-            ['name' => $validated['client']],
-            ['name' => $validated['client']]
-        );
+    $client = Client::firstOrCreate(
+        ['name' => $validated['client']],
+        ['name' => $validated['client']]
+    );
 
-        \App\Models\Task::create([
-            'task' => $validated['task'],
-            'employee_id' => $validated['employee_id'],
-            'client_id' => $client->id,
-            'status' => 'Pending',
-            'due' => $validated['due'],
-            'expected_timeline' => $validated['expected_timeline'],
-        ]);
+    Task::create([
+        'task'               => $validated['task'],
+        'employee_id'        => $validated['employee_id'],
+        'client_id'          => $client->id,
+        // default is Pending – no change needed
+        'status'             => 'Pending',
+        'due'                => $validwwwted['due'],
+        'expected_timeline'  => $validated['expected_timeline'],
+        'user_id'            => Auth::id(),
+    ]);
 
-        return redirect()->route('manager.index')->with('success', 'Task added successfully!');
-    }
+    return redirect()->route('manager.index')
+                     ->with('success', 'Task added successfully!');
+}
 
     public function destroy($id)
     {

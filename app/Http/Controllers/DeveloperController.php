@@ -11,91 +11,56 @@ use App\Models\TaskDetail;
 
 class DeveloperController extends Controller
 {
-    private function getDeveloperData()
+    public function index()
     {
-        // Get all developers
-        $employees = Employee::where('category', 'Developers')
-            ->select('id', 'name', 'sub_category')
-            ->get()
-            ->map(function ($employee) {
-                return [
-                    'id' => $employee->id,
-                    'name' => $employee->name,
-                    'subCategory' => $employee->sub_category,
-                ];
-            });
-
-        // Get all tasks with developer relationship
-        $tasks = Task::with([
-            'employee:id,name,category,sub_category',
-            'client:id,name',
-            'detail'
-        ])
-        ->whereHas('employee', function ($query) {
-            $query->where('category', 'Developers');
-        })
-        ->get()
-        ->map(function ($task) {
+        // Get all employees with their tasks, clients, and task details
+        // Remove the category filter to get all employees
+        $developers = Employee::with(['tasks' => function ($query) {
+            $query->with(['client', 'detail'])
+                  ->orderBy('status')
+                  ->orderBy('due');
+        }])
+        ->get() // Get all employees regardless of category
+        ->map(function ($developer) {
             return [
-                'id' => $task->id,
-                'task' => $task->task,
-                'employeeId' => $task->employee_id,
-                'developer' => $task->employee->name ?? 'Unknown',
-                'developerSubCategory' => $task->employee->sub_category ?? null,
-                'client' => $task->client->name ?? 'Unknown',
-                'status' => $task->status ?? 'Pending',
-                'due' => $task->due ? $task->due->format('Y-m-d') : null,
-                'projectedTimeline' => $task->due ? $task->due->format('Y-m-d') : null,
-                'deliveredDate' => $task->detail && $task->detail->delivered_date 
-                    ? $task->detail->delivered_date->format('Y-m-d') 
-                    : '',
-                'devRemark' => $task->detail ? ($task->detail->dev_remark ?? '') : '',
-                'clientRemark' => $task->detail ? ($task->detail->client_remark ?? '') : '',
+                'id' => $developer->id,
+                'name' => $developer->name,
+                'category' => $developer->category,
+                'sub_category' => $developer->sub_category,
+                'manager' => $developer->manager,
+                'total_tasks' => $developer->tasks->count(),
+                'active_tasks' => $developer->tasks->where('status', 'active')->count(),
+                'completed_tasks' => $developer->tasks->where('status', 'completed')->count(),
+                'pending_tasks' => $developer->tasks->where('status', 'pending')->count(),
+                'tasks' => $developer->tasks->map(function ($task) {
+                    return [
+                        'id' => $task->id,
+                        'task' => $task->task,
+                        'status' => $task->status,
+                        'due' => $task->due ? $task->due->format('Y-m-d') : null,
+                        'expected_timeline' => $task->expected_timeline ? $task->expected_timeline->format('Y-m-d') : null,
+                        'client' => $task->client ? [
+                            'id' => $task->client->id,
+                            'name' => $task->client->name,
+                        ] : null,
+                        'detail' => $task->detail,
+                    ];
+                }),
             ];
         });
 
-        return [
-            'tasks' => $tasks,
-            'employees' => $employees,
+        // Summary statistics
+        $summary = [
+            'total_developers' => $developers->count(),
+            'total_tasks' => $developers->sum('total_tasks'),
+            'total_active_tasks' => $developers->sum('active_tasks'),
+            'total_completed_tasks' => $developers->sum('completed_tasks'),
+            'developers_with_tasks' => $developers->where('total_tasks', '>', 0)->count(),
         ];
-    }
 
-    public function index()
-    {
-        return Inertia::render('Developer', $this->getDeveloperData());
-    }
-
-    public function updateTask(Request $request, $id)
-    {
-        $task = Task::findOrFail($id);
-        $detail = $task->detail ?? new TaskDetail(['task_id' => $id]);
-
-        $validated = $request->validate([
-            'devRemark' => 'nullable|string|max:1000',
-            'status' => 'nullable|in:Pending,In Progress,Completed,Finished',
-            'delivered_date' => 'nullable|date',
+        return Inertia::render('Developer', [
+            'developers' => $developers,
+            'summary' => $summary,
         ]);
-
-        $updates = [];
-
-        if (isset($validated['status'])) {
-            $updates['status'] = $validated['status'];
-            if (($validated['status'] === 'Completed' || $validated['status'] === 'Finished') 
-                && isset($validated['delivered_date'])) {
-                $detail->delivered_date = $validated['delivered_date'];
-                $detail->save();
-            }
-        }
-
-        if (!empty($updates)) {
-            $task->update($updates);
-        }
-
-        if (isset($validated['devRemark'])) {
-            $detail->dev_remark = $validated['devRemark'];
-            $detail->save();
-        }
-
-        return back()->with('success', 'Task updated successfully!');
     }
 }

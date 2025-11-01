@@ -1,26 +1,30 @@
 <?php
-// app/Http/Controllers/TodoController.php
+
 namespace App\Http\Controllers;
 
 use App\Models\Todo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class TodoController extends Controller
 {
     public function index()
     {
-        $tasks = Todo::all()->map(function ($task) {
-            return [
-                'id' => $task->id,
-                'text' => $task->text,
-                'completed' => $task->completed,
-                'createdAt' => $task->created_at->toDateTimeString(),
-                'dueDate' => $task->due_date ? $task->due_date->format('Y-m-d') : null,
-                'dueTime' => $task->due_time ? $task->due_time->format('H:i') : null,
-                'priority' => $task->priority,
-            ];
-        });
+        $tasks = Todo::where('user_id', Auth::id()) // only user’s tasks
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($task) {
+                return [
+                    'id' => $task->id,
+                    'text' => $task->text,
+                    'completed' => $task->completed,
+                    'createdAt' => $task->created_at->toDateTimeString(),
+                    'dueDate' => $task->due_date ? $task->due_date->format('Y-m-d') : null,
+                    'dueTime' => $task->due_time ? $task->due_time->format('H:i') : null,
+                    'priority' => $task->priority,
+                ];
+            });
 
         return Inertia::render('Todo', [
             'tasks' => $tasks,
@@ -42,6 +46,7 @@ class TodoController extends Controller
             'due_date' => $validated['dueDate'],
             'due_time' => $validated['dueTime'],
             'priority' => $validated['priority'],
+            'user_id' => Auth::id(), // ✅ assign to logged-in user
         ]);
 
         return back()->with('success', 'Task added successfully!');
@@ -49,7 +54,8 @@ class TodoController extends Controller
 
     public function update(Request $request, $id)
     {
-        $task = Todo::findOrFail($id);
+        $task = Todo::where('user_id', Auth::id())->findOrFail($id); // ✅ secure access
+
         $validated = $request->validate([
             'text' => 'sometimes|required|string|max:255',
             'dueDate' => 'sometimes|required|date',
@@ -65,7 +71,7 @@ class TodoController extends Controller
 
     public function destroy($id)
     {
-        $task = Todo::findOrFail($id);
+        $task = Todo::where('user_id', Auth::id())->findOrFail($id); // ✅ secure access
         $task->delete();
 
         return back()->with('success', 'Task deleted successfully!');
